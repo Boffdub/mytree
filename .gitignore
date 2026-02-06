@@ -2,6 +2,8 @@
 
 # Dependencies
 node_modules/
+# Allow docs build assets (fonts etc.) for GitHub Pages
+!docs/assets/node_modules/
 
 # Expo
 .expo/
