@@ -33,6 +33,9 @@
       "eas": {
         "projectId": "a1456519-cd4b-448e-8cd3-f5be8d6ce497"
       }
+    },
+    "experiments": {
+      "baseUrl": "/mytree"
     }
   }
 }
