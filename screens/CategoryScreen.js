@@ -1,11 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from '../constants/colors';
+import { fonts } from '../styles/defaultStyles';
 
 export default function CategoryScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     return (
         <View style={styles.screenContainer}>
             {/* Green Header */}
-            <View style={styles.headerContainer}>
+            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
                 <View style={styles.header}>
                     <TouchableOpacity 
                         style={styles.backButton}
@@ -84,8 +88,7 @@ const styles = StyleSheet.create({
     
     // Green header area
     headerContainer: {
-        backgroundColor: '#CEE7CF',
-        paddingTop: 60,
+        backgroundColor: colors.lightGreen,
         paddingHorizontal: 20,
         paddingBottom: 15,
     },
@@ -108,27 +111,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     backButtonText: {
-        color: '#FFFFFF',
+        color: colors.white,
         fontSize: 20,
         fontWeight: 'bold',
+        fontFamily: fonts.bold,
     },
-    
-    // Placeholder for centering title
-    placeholder: {
-        width: 40,
-    },
-    
-    // Header title
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#1E8F2D',
+        fontFamily: fonts.bold,
+    },
+    placeholder: {
+        width: 40,
     },
     
     // White body area
     bodyContainer: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.white,
         paddingHorizontal: 20,
         paddingTop: 20,
     },
@@ -139,6 +140,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 30,
         lineHeight: 22,
+        fontFamily: fonts.regular,
     },
     
     buttonContainer: {
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
     },
     
     categoryButton: {
-        backgroundColor: '#1E8F2D',
+        backgroundColor: colors.primaryGreen,
         paddingVertical: 20,
         paddingHorizontal: 30,
         borderRadius: 25,
@@ -171,8 +173,9 @@ const styles = StyleSheet.create({
     },
     
     categoryButtonText: {
-        color: '#fff',
+        color: colors.white,
         fontSize: 18,
         fontWeight: 'bold',
+        fontFamily: fonts.bold,
     },
 });
