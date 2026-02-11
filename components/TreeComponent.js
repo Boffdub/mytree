@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 
-export default function TreeComponent({ score = 0 }) {
+export default function TreeComponent({ score = 0, showGround = true }) {
   // Option B: 5 distinct foliage layers unlocked by score (0-5)
   const clampedScore = Math.max(0, Math.min(score, 5));
 
@@ -15,10 +15,10 @@ export default function TreeComponent({ score = 0 }) {
   };
 
   // Trunk grows as score increases (simple but feels good)
-  const trunkHeight = 150;
+  const trunkHeight = 180;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, !showGround && styles.containerNoGround]}>
       <View style={styles.foliageContainer}>
         <View style={[styles.triangle1, { opacity: getLayerOpacity(1) }]} />
         <View style={[styles.triangle2, { opacity: getLayerOpacity(2) }]} />
@@ -28,7 +28,7 @@ export default function TreeComponent({ score = 0 }) {
       </View>
 
       <View style={[styles.trunk, { height: trunkHeight, opacity: clampedScore === 0 ? 0.2 : 1 }]} />
-      <View style={styles.ground} />
+      {showGround && <View style={styles.ground} />}
     </View>
   );
 }
@@ -39,6 +39,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: 20,
+  },
+  containerNoGround: {
+    paddingBottom: 0,
   },
   foliageContainer: {
     alignItems: 'center',

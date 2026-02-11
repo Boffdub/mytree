@@ -10,6 +10,7 @@ export default function TreeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { score } = useAppContext();
 
+
     return (
         <LinearGradient
             colors={[colors.lightGreen, colors.white]}
@@ -27,20 +28,20 @@ export default function TreeScreen({ navigation }) {
                 <View style={styles.headerSpacer} />
             </View>
 
-            {/* Instruction text - outside header */}
-            <Text style={styles.instructionText}>
-                Every question you get right, your tree grows an inch. Every question you get wrong it shrinks an inch.
-            </Text>
-
-            {/* Tree Wrapper - outside header */}
+            {/* Tree Wrapper - tree sits above ground strip */}
             <View style={styles.treeWrapper}>
-                <TreeComponent score={score} />
+                <TreeComponent score={score} showGround={false} />
             </View>
 
-            {/* Score badge - absolutely positioned */}
-            <View style={styles.scoreBadge} >
-                <Text style={styles.scoreBadgeText}>Score: {score}</Text>
-            </View> 
+            {/* Ground strip: instruction + score (stacked) */}
+            <View style={styles.ground}>
+                <Text style={styles.instructionText}>
+                    Every question you get right, your tree grows an inch. Every question you get wrong, it shrinks.
+                </Text>
+                <View style={styles.scoreBadge}>
+                    <Text style={styles.scoreBadgeText}>Score: {score}</Text>
+                </View>
+            </View>
         </LinearGradient>
     );
 }
@@ -81,29 +82,33 @@ const styles = StyleSheet.create({
     headerSpacer: {
         width: 40,
     },
-    instructionText: {
-        fontSize: 14,
-        color: colors.black,
-        textAlign: 'center',
-        paddingHorizontal: 20,
-        marginBottom: 48,
-        fontFamily: fonts.regular,
-        lineHeight: 20,
-    },
     treeWrapper: {
         flex: 1,
         width: '100%',
         justifyContent: 'flex-end',
-        paddingBottom: 20,
+        paddingBottom: 0,
         alignItems: 'center',
     },
+    ground: {
+        width: '100%',
+        backgroundColor: colors.treeTrunk,
+        paddingVertical: 20,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+    },
+    instructionText: {
+        fontSize: 14,
+        color: colors.white,
+        textAlign: 'center',
+        paddingHorizontal: 8,
+        marginBottom: 16,
+        fontFamily: fonts.regular,
+        lineHeight: 20,
+    },
     scoreBadge: {
-        position: 'absolute',
-        bottom: 100,
-        right: 20,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 2,
-        borderColor: '#1E8F2D',
+        borderColor: colors.primaryGreen,
         borderRadius: 20,
         paddingVertical: 8,
         paddingHorizontal: 16,
