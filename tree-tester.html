@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree Screen Tester</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Colors from constants/colors.js */
+    :root {
+      --primaryGreen: #1E8F2D;
+      --lightGreen: #CEE7CF;
+      --lightGreenTransparent: rgba(206, 231, 207, 0.6);
+      --white: #FFFFFF;
+      --black: #000000;
+      --treeTrunk: #0B6B2A;
+      --treeGround: #7A2323;
+      /* Extra greens for organic foliage */
+      --foliageDark: #0B6B2A;
+      --foliageMid: #1E8F2D;
+      --foliageLight: #2DA63E;
+      --bark: #6B4423;
+      --barkDark: #4A3018;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      background: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    /* Phone frame – narrow width for app preview */
+    .phone-frame {
+      width: 100%;
+      max-width: 390px;
+      min-height: 100vh;
+      margin: 0 auto;
+      box-shadow: 0 0 0 2px #333, 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* TreeScreen container – gradient */
+    .container {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to bottom, var(--lightGreen), var(--white));
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 18px 20px 10px;
+      background-color: var(--lightGreenTransparent);
+    }
+
+    .backButton {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .backButtonText {
+      font-size: 24px;
+      color: var(--black);
+      font-weight: bold;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primaryGreen);
+      margin: 0 0 5px 0;
+    }
+
+    .headerSpacer {
+      width: 40px;
+    }
+
+    .instructionText {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: var(--white);
+      text-align: center;
+      padding: 0 40px;
+      line-height: 20px;
+      width: 70%;
+    }
+
+    /* Tree wrapper – flex grow, content at bottom */
+    .treeWrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding-bottom: 20px;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* Score badge */
+    .scoreBadge {
+      position: absolute;
+      bottom: 100px;
+      right: 20px;
+      background-color: var(--white);
+      border: 2px solid var(--primaryGreen);
+      border-radius: 20px;
+      padding: 8px 16px;
+    }
+
+    .scoreBadgeText {
+      color: var(--primaryGreen);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Tester controls – inside phone layout */
+    .testerControls {
+      background: var(--white);
+      border: 2px solid var(--primaryGreen);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 0 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .testerControls label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primaryGreen);
+      margin-bottom: 6px;
+    }
+
+    .testerControls input[type="range"] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--primaryGreen);
+    }
+
+    .testerControls .scoreValue {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* --- Organic tree (foliage blobs + trunk) --- */
+    .treeContainer {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 20px;
+      flex-direction: column;
+    }
+
+    .foliageContainer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-direction: column;
+      margin-bottom: -8px;
+      position: relative;
+    }
+
+    /* Rounded foliage layers – top to bottom, like a natural canopy */
+    .foliageBlob {
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .foliageBlob.layer1 { width: 56px;  height: 50px;  background: var(--foliageLight); margin-bottom: -12px; }
+    .foliageBlob.layer2 { width: 88px;  height: 72px;  background: var(--foliageMid);   margin-bottom: -16px; }
+    .foliageBlob.layer3 { width: 120px; height: 96px;  background: var(--foliageMid);   margin-bottom: -20px; }
+    .foliageBlob.layer4 { width: 152px; height: 110px; background: var(--foliageDark);  margin-bottom: -22px; }
+    .foliageBlob.layer5 { width: 180px; height: 120px; background: var(--foliageDark); }
+
+    /* Soft shadow under foliage for depth */
+    .foliageBlob.layer4,
+    .foliageBlob.layer5 {
+      box-shadow: 0 4px 12px rgba(11, 107, 42, 0.35);
+    }
+
+    .trunk {
+      width: 44px;
+      min-height: 70px;
+      background: linear-gradient(90deg, var(--barkDark) 0%, var(--bark) 50%, var(--barkDark) 100%);
+      border-radius: 6px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15), 2px 0 4px rgba(0,0,0,0.1);
+    }
+
+    .ground {
+      display: flex;
+      width: 110%;
+      max-width: 100vw;
+      height: 160px;
+      background: var(--treeTrunk);
+      margin-top: -4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="container">
+      <!-- Header (TreeScreen) -->
+      <header class="header">
+        <div class="backButton"><span class="backButtonText">←</span></div>
+        <h1 class="title">My Tree</h1>
+        <div class="headerSpacer"></div>
+      </header>
+    
+      <!-- Tester controls (inside phone layout) -->
+      <div class="testerControls">
+        <label for="scoreSlider">Score (0–5)</label>
+        <input type="range" id="scoreSlider" min="0" max="5" value="0" step="1" />
+        <div class="scoreValue">Score: <span id="sliderValue">0</span></div>
+      </div>
+
+      <!-- Tree wrapper -->
+      <div class="treeWrapper">
+        <div class="treeContainer">
+          <div class="foliageContainer">
+            <div class="foliageBlob layer1" id="layer1"></div>
+            <div class="foliageBlob layer2" id="layer2"></div>
+            <div class="foliageBlob layer3" id="layer3"></div>
+            <div class="foliageBlob layer4" id="layer4"></div>
+            <div class="foliageBlob layer5" id="layer5"></div>
+          </div>
+          <div class="trunk" id="trunk"></div>
+          <div class="ground">
+            <div class="instructionText">
+              Every question you get right, your tree grows an inch. Every question you get wrong it shrinks an inch.
+            </div>
+            <div class="scoreBadge">
+              <span class="scoreBadgeText">Score: <span id="scoreDisplay">0</span></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // Same logic as TreeComponent.js
+    function getLayerOpacity(layerIndex, clampedScore) {
+      if (clampedScore === 0) return 0.12;
+      const isFilled = layerIndex >= (6 - clampedScore);
+      return isFilled ? 1 : 0.15;
+    }
+
+    function updateTree(score) {
+      const clampedScore = Math.max(0, Math.min(score, 5));
+
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById('layer' + i);
+        if (el) el.style.opacity = getLayerOpacity(i, clampedScore);
+      }
+
+      const trunk = document.getElementById('trunk');
+      if (trunk) trunk.style.opacity = clampedScore === 0 ? 0.2 : 1;
+      trunk.style.height = '90px';
+
+      document.getElementById('scoreDisplay').textContent = score;
+      document.getElementById('sliderValue').textContent = score;
+    }
+
+    const slider = document.getElementById('scoreSlider');
+    slider.addEventListener('input', function () {
+      updateTree(parseInt(this.value, 10));
+    });
+
+    updateTree(0);
+  </script>
+</body>
+</html>
