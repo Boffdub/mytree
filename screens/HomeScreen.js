@@ -28,7 +28,7 @@ export default function HomeScreen({ navigation }) {
 
             {/* Description */}
             <Text style={styles.description}>
-                Grow Your Tree by answering questions about the climate.
+                Answer questions about the climate to grow your virtual tree!
             </Text>
 
             {/* Buttons */}
@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         lineHeight: 22,
         fontFamily: fonts.regular,
+        width: '75%',
     },
     primaryButton: {
         backgroundColor: '#1E8F2D',
