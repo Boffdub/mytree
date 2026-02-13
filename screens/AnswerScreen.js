@@ -77,7 +77,9 @@ export default function AnswerScreen({ navigation, route }) {
                 <ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={styles.scrollViewContent}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator={true}
+                    bounces={true}
+                    keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.card}>
                     {question ? (
@@ -282,10 +284,12 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
         width: '100%',
+        minHeight: 0,
     },
     scrollViewContent: {
         alignItems: 'center',
-        paddingBottom: 20,
+        paddingBottom: 40,
+        flexGrow: 1,
     },
     card: {
         backgroundColor: colors.white,
