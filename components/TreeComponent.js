@@ -1,26 +1,60 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 import { colors } from '../constants/colors';
 
-export default function TreeComponent({ score = 0, animatedScore, showGround = true }) {
+const UNFILLED = 0.15;
+const ZERO_OPACITY = 0.12;
+
+// One interpolation per layer (layer 1 = top, 5 = bottom). Fills from bottom up; matches getLayerOpacity.
+function layerOpacityInterpolation(animValue, layerIndex) {
+  const fillStart = 5 - layerIndex;
+  const fillEnd = 6 - layerIndex;
+  const start = fillStart <= 0 ? 0.001 : fillStart;
+  return animValue.interpolate({
+    inputRange: [0, start, fillEnd, 6],
+    outputRange: [ZERO_OPACITY, UNFILLED, 1, 1],
+  });
+}
+
+function trunkOpacityInterpolation(animValue) {
+  return animValue.interpolate({
+    inputRange: [0, 0.001, 6],
+    outputRange: [0.2, 0.2, 1],
+  });
+}
+
+export default function TreeComponent({ score = 0, animatedScore, animatedValue, showGround = true }) {
+  const useAnimatedValue = animatedValue != null;
   const displayScore = animatedScore !== undefined && animatedScore !== null ? animatedScore : score;
   const clampedScore = Math.max(0, Math.min(displayScore, 5));
 
   const getLayerOpacity = (layerIndex) => {
-    // layerIndex 1 = top (smallest), 5 = bottom (largest). Layers fill from bottom up.
-    if (clampedScore === 0) return 0.12;
-    const unfilled = 0.15;
-    const fillStart = 5 - layerIndex; // layer 5 fills [0,1], layer 4 [1,2], etc.
+    if (clampedScore === 0) return ZERO_OPACITY;
+    const fillStart = 5 - layerIndex;
     const fillEnd = 6 - layerIndex;
-    if (clampedScore <= fillStart) return unfilled;
+    if (clampedScore <= fillStart) return UNFILLED;
     if (clampedScore >= fillEnd) return 1;
-    // Smooth interpolation so growth is visible during animation (no discrete pop at the end)
     const t = (clampedScore - fillStart) / (fillEnd - fillStart);
-    return unfilled + (1 - unfilled) * t;
+    return UNFILLED + (1 - UNFILLED) * t;
   };
 
-  // Trunk grows as score increases (simple but feels good)
   const trunkHeight = 180;
+
+  if (useAnimatedValue) {
+    return (
+      <View style={[styles.container, !showGround && styles.containerNoGround]}>
+        <View style={styles.foliageContainer}>
+          <Animated.View style={[styles.triangle1, { opacity: layerOpacityInterpolation(animatedValue, 1) }]} />
+          <Animated.View style={[styles.triangle2, { opacity: layerOpacityInterpolation(animatedValue, 2) }]} />
+          <Animated.View style={[styles.triangle3, { opacity: layerOpacityInterpolation(animatedValue, 3) }]} />
+          <Animated.View style={[styles.triangle4, { opacity: layerOpacityInterpolation(animatedValue, 4) }]} />
+          <Animated.View style={[styles.triangle5, { opacity: layerOpacityInterpolation(animatedValue, 5) }]} />
+        </View>
+        <Animated.View style={[styles.trunk, { height: trunkHeight, opacity: trunkOpacityInterpolation(animatedValue) }]} />
+        {showGround && <View style={styles.ground} />}
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, !showGround && styles.containerNoGround]}>
@@ -31,7 +65,6 @@ export default function TreeComponent({ score = 0, animatedScore, showGround = t
         <View style={[styles.triangle4, { opacity: getLayerOpacity(4) }]} />
         <View style={[styles.triangle5, { opacity: getLayerOpacity(5) }]} />
       </View>
-
       <View style={[styles.trunk, { height: trunkHeight, opacity: clampedScore === 0 ? 0.2 : Math.min(1, 0.2 + 0.8 * clampedScore) }]} />
       {showGround && <View style={styles.ground} />}
     </View>

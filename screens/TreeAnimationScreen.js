@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Animated, Easing, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import TreeComponent from '../components/TreeComponent';
@@ -42,7 +42,8 @@ export default function TreeAnimationScreen({ navigation, route }) {
         });
         Animated.timing(animValue, {
             toValue: toScore,
-            duration: 3000,
+            duration: 2200,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
             useNativeDriver: false,
         }).start(({ finished }) => {
             if (finished) {
@@ -154,7 +155,7 @@ export default function TreeAnimationScreen({ navigation, route }) {
             </View>
 
             <View style={styles.treeWrapper}>
-                <TreeComponent animatedScore={displayScore} showGround={false} />
+                <TreeComponent animatedValue={animValue} showGround={false} />
             </View>
 
             <View style={styles.ground}>
