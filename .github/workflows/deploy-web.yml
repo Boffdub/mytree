@@ -38,7 +38,7 @@ jobs:
       - name: Update docs from dist
         run: |
           rm -rf docs/_expo docs/assets docs/favicon.ico docs/index.html docs/metadata.json
-          cp -r dist/_expo dist/assets dist/favicon.ico dist/index.html dist/metadata.json docs/
+          cp -r dist/. docs/
           touch docs/.nojekyll
 
       - name: Commit and push docs
