@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   foliageContainer: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginBottom: -20,
+    // marginBottom: -20,
   },
 
   // Triangles (top to bottom)
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: colors.treeTrunk,
-    marginBottom: -20,
+    // marginBottom: -20,
   },
   triangle2: {
     width: 0,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: colors.treeTrunk,
-    marginBottom: -25,
+    // marginBottom: -25,
   },
   triangle3: {
     width: 0,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: colors.treeTrunk,
-    marginBottom: -30,
+    // marginBottom: -30,
   },
   triangle4: {
     width: 0,
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: colors.treeTrunk,
-    marginBottom: -35,
+    // marginBottom: -35,
   },
   triangle5: {
     width: 0,

@@ -113,6 +113,7 @@ export default function TreeAnimationScreen({ navigation, route }) {
             justifyContent: 'flex-end',
             paddingBottom: 0,
             alignItems: 'center',
+            paddingVertical: 20,
         },
         ground: {
             width: '100%',
