@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import TreeComponent from '../components/TreeComponent';
@@ -28,13 +28,18 @@ export default function TreeScreen({ navigation }) {
                 <View style={styles.headerSpacer} />
             </View>
 
-            {/* Tree Wrapper - tree sits above ground strip */}
-            <View style={styles.treeWrapper}>
-                <TreeComponent score={score} showGround={false} />
-            </View>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                showsVerticalScrollIndicator={true}
+            >
+                {/* Tree Wrapper - tree sits above ground strip */}
+                <View style={styles.treeWrapper}>
+                    <TreeComponent score={score} showGround={false} />
+                </View>
 
-            {/* Ground strip: instruction + score (stacked) */}
-            <View style={styles.ground}>
+                {/* Ground strip: instruction + score (stacked) */}
+                <View style={styles.ground}>
                 <Text style={styles.instructionText}>
                     Every question you get right, your tree grows an inch. Every question you get wrong, it shrinks.
                 </Text>
@@ -42,6 +47,7 @@ export default function TreeScreen({ navigation }) {
                     <Text style={styles.scoreBadgeText}>Score: {score}</Text>
                 </View>
             </View>
+            </ScrollView>
         </LinearGradient>
     );
 }
@@ -82,8 +88,16 @@ const styles = StyleSheet.create({
     headerSpacer: {
         width: 40,
     },
+    scrollView: {
+        flex: 1,
+        minHeight: 0,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+    },
     treeWrapper: {
         flex: 1,
+        minHeight: 280,
         width: '100%',
         justifyContent: 'flex-end',
         paddingBottom: 0,

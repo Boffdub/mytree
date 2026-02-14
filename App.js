@@ -49,7 +49,10 @@ export default function App() {
         <View style={[styles.appOuter, isWide && styles.appOuterWide]}>
           <View style={[styles.appInner, isWide && styles.appInnerWide]}>
             <NavigationContainer>
-              <Stack.Navigator initialRouteName="Home">
+              <Stack.Navigator
+                initialRouteName="Home"
+                screenOptions={{ cardStyle: { flex: 1 } }}
+              >
                 <Stack.Screen
                   name="Home"
                   component={HomeScreen}

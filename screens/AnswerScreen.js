@@ -212,6 +212,7 @@ export default function AnswerScreen({ navigation, route }) {
 const styles = StyleSheet.create({
     screenContainer: {
         flex: 1,
+        minHeight: 0,
     },
     headerContainer: {
         backgroundColor: colors.lightGreen,
@@ -234,6 +235,7 @@ const styles = StyleSheet.create({
     },
     bodyContainer: {
         flex: 1,
+        minHeight: 0,
         backgroundColor: colors.white,
         paddingHorizontal: 20,
         paddingTop: 30,
