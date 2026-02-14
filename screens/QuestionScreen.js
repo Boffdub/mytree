@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAppContext } from '../context/AppContext';
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -53,6 +54,8 @@ export default function QuestionScreen({ navigation, route }) {
         }
     }, [category, route.params?.questionIndex]);
     
+    const { score } = useAppContext();
+
     return (
         <View style={styles.screenContainer}>
             <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>         
@@ -91,7 +94,9 @@ export default function QuestionScreen({ navigation, route }) {
                             <TouchableOpacity 
                                 style={styles.submitButton}
                                 onPress={() => {
-                                    navigation.navigate('Answer', {
+                                    navigation.navigate('TreeAnimation', {
+                                        fromScore: score,
+                                        isCorrect: selectedAnswer === currentQuestion.correct,
                                         question: currentQuestion,
                                         selectedAnswer: selectedAnswer,
                                         category: category,

@@ -56,7 +56,7 @@ export default function CategoryScreen({ navigation }) {
                         onPress={() => navigation.navigate('Question', { category: 'Food & Agriculture' })}
                     >
                         <Image 
-                            source={require('../assets/vectors/Food&Agriculture.png')}
+                            source={require('../assets/vectors/Food_Agriculture.png')}
                             style={styles.categoryIcon}
                             resizeMode="contain"
                         />

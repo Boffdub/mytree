@@ -7,7 +7,7 @@ import { fonts } from '../styles/defaultStyles';
 
 export default function AnswerScreen({ navigation, route }) {
     const insets = useSafeAreaInsets();
-    const { question, selectedAnswer, category, questions, questionIndex } = route.params || {};
+    const { question, selectedAnswer, category, questions, questionIndex, scoreAlreadyUpdated } = route.params || {};
     const { score, incrementScore, decrementScore } = useAppContext();
     
     // Track which questions we've already scored to prevent double-counting
@@ -31,6 +31,7 @@ export default function AnswerScreen({ navigation, route }) {
     
     // Update score when a new question is shown (only score each question once)
     useEffect(() => {
+        if (scoreAlreadyUpdated) return;
         // Create a unique key for this question (category + question id)
         const questionKey = question ? `${category}-${question.id}-${questionIndex}` : null;
         
@@ -45,7 +46,7 @@ export default function AnswerScreen({ navigation, route }) {
                 decrementScore();
             }
         }
-    }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore]);
+    }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore, scoreAlreadyUpdated]);
 
     return (
         <View style={styles.screenContainer}>

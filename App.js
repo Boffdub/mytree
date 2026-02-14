@@ -15,6 +15,7 @@ import HomeScreen from './screens/HomeScreen';
 import CategoryScreen from './screens/CategoryScreen';
 import QuestionScreen from './screens/QuestionScreen';
 import AnswerScreen from './screens/AnswerScreen';
+import TreeAnimationScreen from './screens/TreeAnimationScreen';
 import TreeScreen from './screens/TreeScreen';
 
 // Keep splash screen visible while fonts load
@@ -62,6 +63,11 @@ export default function App() {
                 <Stack.Screen
                   name="Question"
                   component={QuestionScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="TreeAnimation"
+                  component={TreeAnimationScreen}
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
