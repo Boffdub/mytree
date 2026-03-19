@@ -1,0 +1,160 @@
+Product Requirement Document
+
+Overview / Summary
+
+MyTree is an app that makes learning about climate change fun. Understanding the effects of climate change is important because it’s the first step in taking climate action, but it’s not a fun topic to think about. Users are asked questions about climate change categories and they have a virtual tree. In order to grow the tree, the user has to answer a question correctly. When the user answers incorrectly, the tree shrinks.
+
+iOS first (App Store); Android in a later version.
+
+Goals & Success Criteria
+
+This app will be a success if this can be in an app you can download in the app store by the end of the year. (It’s currently February 16th, 2026)
+
+This is a showcase to future employers that I can code and work with AI as well as design. I’d love if this was a full-time job but I’m aware, it’ll likely just be my side project in the app store and on my portfolio.
+
+We use ‘beta’ to mean the first feature-complete version (100 questions, core features); ‘launch’ is app store release. No separate smaller MVP before beta.
+
+Target Users / Personas
+
+Climate Curious people 
+I potentially want this to be used in schools.
+
+User Stories / Use Cases
+
+As a person curious about climate change, I want to learn about climate change so that I can start to take action in the climate
+
+Features & Requirements
+
+Multiple Categories (energy, transportation, food & agriculture, carbon removal) - currently have
+    Descriptions - Questions related about climate
+    Constraints - 20 questions currently but goal is to have 100 questions for the beta version. 
+Virtual Tree - currently have
+    Description - The tree grows when a question is correct and the tree shrinks when a question is incorrect.
+    Constraints - Right now it’s 5 correct questions to get a tree.
+Infographics and explanation - must haves
+    Description - Each answer will have a infographic and explanation
+    Constraints - this will take a lot of time. I want to make the infographics and it will be fun for me but could be a big reason it won’t launch this year. I do plan on getting someone to help with this though.
+Sources - must haves
+    Description - Each question should allow the user to read an article about it. 
+    Constraints - By providing a link, it’ll take them away from the app. Might have to change the current flow.
+Hints - must haves
+    Description - Sometimes people don’t know the answer, so they need a hint.
+    Constraints - Don’t want the hint to be a cheat code.
+Profile - must haves
+    Description - Allows the user to save their progress. Eventually, we’ll have a leaderboard, so it’ll be important later on.
+    Constraints - Will have to build an onboarding process. Security concerns
+Statistics - nice to have
+    Description - Users can see how many trees they’ve grown and how many questions they’ve answered correctly. Will eventually be turned into a leaderboard
+    Constraints - users may want to compare themselves to others
+Leaderboard - nice to have
+    Description - A way for users to compete. Trees grown in a week. In a month.
+    Constraints - how competitive should they be
+Tree Farm - nice to have
+    Description - When the tree is fully grown, the tree is put in a tree farm. 
+    Constraints - Might be tough to explain this concept to people. Don’t know how expansive this could be.
+
+User Flow / Experience
+
+Home -> Start Quiz -> Category -> Q1 -> Tree Animation -> A1 -> Next Question -> Q2 -> Tree Animation -> A2 -> Next Question -> Q3 -> Tree Animation -> A3 -> Next Question -> Q4 -> Tree Animation -> A4 -> Next Question -> Q5 -> Tree Animation -> A5 
+Home
+    Start Quiz
+    View Tree
+    Statistics
+
+Correct Answer Screen
+    Correct Answer
+    Infographic
+    Explanation
+    Buttons 
+        Next Question
+        Source
+        View Tree
+
+Incorrect Answer Screen
+    Answer user chose
+    Correct Answer
+    Infographic
+    Explanation
+    Buttons 
+        Next Question
+        Source
+        View Tree
+
+View Tree
+    Tree component
+        5 triangles on top
+        Trunk
+        Ground
+    Tree filled
+    Tree outline
+    Instruction text
+    Back button
+    Score badge
+
+Statistics
+    Specs and Contents TBD after Figma design
+
+Out of Scope (for this release)
+Tree Farm and leaderboard
+
+Dependencies & Assumptions
+
+I don’t know how long it’ll take to create infographics
+I might get busy with other things or get bored
+I’ve enjoyed vibe coding but I don’t know if I want to vibe code long term
+I’ll need a developer, climate expert and another designer.
+
+Risks & Open Questions
+
+Are the questions too hard?
+    CURRENT THINKING: I think they are too hard. I'm going to add hints to make it easier. I could also label the difficulty of the questions have users pick what works.
+Add categories? Subtract categories?
+Do I even need categories? Maybe they should be random?
+    CURRENT THINKING: I think I'll get rid of categories and make it more random. I do like the icons though. So, maybe I'll have some indicator.
+What happens to the tree after you reach 5? What happens when there are 100 questions?
+    CURRENT THINKING: Probably will add the tree farm. 
+How much info do we need from the user for onboarding?
+    CURRENT THINKING: User name, password, email
+What happens if the tree farm gets full?
+What happens when people have answered all the questions?
+    CURRENT THINKING: Might be the reason this won't be sustainable long term.
+Providing a link for the source button might take the user away from the screen?
+Assuming this idea is validated, How do I monetize this?
+    CURRENT THINKING: Bring this to schools. Money might go to a climate related non-profit?
+How can this help get users to the next step in taking climate action?
+    CURRENT THINKING: Could be another app?
+
+Timeline / Milestones (All dates are tentative)
+Beta = feature-complete test version; 
+launch = public app store release (same build or plus polish)
+
+February - March 15th
+User Testing 
+    Build on feedback
+    Validate product
+    1-on-1 feedback and some communities I’m a part of
+Work on Feedback
+Build Order: Onboarding -> Statistics -> (later) tree farm; tree farm spec'd early for future build.
+
+March 15th - May 2026
+Climatebase Capstone
+    Accelerator that can help make this become an actual thing.
+    Recruit developer, climate expert and designer
+
+May 2026 - August 2026
+    Work on Infographics and get to 100 questions 
+    Work on Feedback
+
+August 31 2026
+Beta in Public
+    Test with users to make sure there are no bugs
+
+December 15th
+    Launch App in ios store
+
+
+Appendix / References
+
+Links to designs, research notes, user testing summary, or other docs that support the PRD
+Github Pages: https://boffdub.github.io/mytree/
+Figma: https://www.figma.com/design/es1BE4XlfZQvTtnCvWmxF5/Climate-Trivia?node-id=3216-13&p=f&m=dev

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree Animation Screen Tester</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Colors from constants/colors.js */
+    :root {
+      --primaryGreen: #1E8F2D;
+      --lightGreen: #CEE7CF;
+      --lightGreenTransparent: rgba(206, 231, 207, 0.6);
+      --white: #FFFFFF;
+      --black: #000000;
+      --treeTrunk: #0B6B2A;
+      --treeGround: #7A2323;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      background: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    /* Phone frame */
+    .phone-frame {
+      width: 100%;
+      max-width: 390px;
+      min-height: 100vh;
+      margin: 0 auto;
+      box-shadow: 0 0 0 2px #333, 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* TreeAnimationScreen container – gradient */
+    .container {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to bottom, var(--lightGreen), var(--white));
+      padding: 0;
+    }
+
+    /* Header (matches TreeAnimationScreen – no interactive back button) */
+    .header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 18px 20px 10px;
+      background-color: var(--lightGreenTransparent);
+    }
+
+    .backButton {
+      width: 40px;
+      height: 40px;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primaryGreen);
+      margin: 0 0 5px 0;
+    }
+
+    .headerSpacer {
+      width: 40px;
+    }
+
+    /* Tester controls */
+    .testerControls {
+      background: var(--white);
+      border: 2px solid var(--primaryGreen);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 0 20px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .testerControls label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primaryGreen);
+      margin-bottom: 6px;
+    }
+
+    .testerControls input[type="range"] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--primaryGreen);
+    }
+
+    .testerControls .scoreValue {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .testerControls button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: var(--primaryGreen);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .testerControls button:hover {
+      opacity: 0.9;
+    }
+
+    /* Tree wrapper – matches TreeAnimationScreen layout */
+    .treeWrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding: 20px 0;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* Tree container – matches TreeComponent (triangles + trunk) */
+    .treeContainer {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-direction: column;
+      padding-bottom: 0;
+    }
+
+    .foliageContainer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-direction: column;
+      margin-bottom: -20px;
+    }
+
+    /* CSS triangles matching TreeComponent dimensions */
+    .triangle {
+      width: 0;
+      height: 0;
+      border-left-style: solid;
+      border-right-style: solid;
+      border-bottom-style: solid;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-bottom-color: var(--treeTrunk);
+    }
+
+    .triangle1 { 
+      border-left-width: 70px;  
+      border-right-width: 70px;  
+      border-bottom-width: 80px;  
+      margin-bottom: -20px; 
+      opacity: 0.15;
+      transition: opacity 2.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .triangle2 { border-left-width: 95px;  border-right-width: 95px;  border-bottom-width: 95px;  margin-bottom: -25px; }
+    .triangle3 { border-left-width: 120px; border-right-width: 120px; border-bottom-width: 110px; margin-bottom: -30px; }
+    .triangle4 { border-left-width: 145px; border-right-width: 145px; border-bottom-width: 125px; margin-bottom: -35px; }
+    .triangle5 { border-left-width: 170px; border-right-width: 170px; border-bottom-width: 140px; }
+
+    .trunk {
+      width: 90px;
+      height: 180px;
+      background-color: var(--treeGround);
+    }
+
+    /* Ground strip – matches TreeAnimationScreen */
+    .ground {
+      width: 100%;
+      background: var(--treeTrunk);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .instructionText {
+      font-size: 14px;
+      color: var(--white);
+      text-align: center;
+      padding: 0 8px;
+      margin-bottom: 16px;
+      line-height: 20px;
+    }
+
+    .scoreBadge {
+      background-color: var(--white);
+      border: 2px solid var(--primaryGreen);
+      border-radius: 20px;
+      padding: 8px 16px;
+    }
+
+    .scoreBadgeText {
+      color: var(--primaryGreen);
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="container">
+      <!-- Header (TreeAnimationScreen style) -->
+      <header class="header">
+        <div class="backButton"></div>
+        <h1 class="title">My Tree</h1>
+        <div class="headerSpacer"></div>
+      </header>
+
+      <!-- Tester controls -->
+      <div class="testerControls">
+        <label for="scoreSlider">Score (0–5) – scrub to tweak layout</label>
+        <input type="range" id="scoreSlider" min="0" max="5" value="2" step="0.01" />
+        <div class="scoreValue">Score: <span id="sliderValue">2</span></div>
+        <button type="button" id="playAnimation">Play animation (2.2s)</button>
+      </div>
+
+      <!-- Tree wrapper – same structure as TreeAnimationScreen -->
+      <div class="treeWrapper">
+        <div class="treeContainer">
+          <div class="foliageContainer">
+            <div class="triangle triangle1" id="layer1"></div>
+            <div class="triangle triangle2" id="layer2"></div>
+            <div class="triangle triangle3" id="layer3"></div>
+            <div class="triangle triangle4" id="layer4"></div>
+            <div class="triangle triangle5" id="layer5"></div>
+          </div>
+          <div class="trunk" id="trunk"></div>
+        </div>
+      </div>
+
+      <!-- Ground strip -->
+      <div class="ground">
+        <div class="instructionText">
+          Every question you get right, your tree grows an inch. Every question you get wrong, it shrinks.
+        </div>
+        <div class="scoreBadge">
+          <span class="scoreBadgeText">Score: <span id="scoreDisplay">2</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ZERO_OPACITY = 0.12;
+    const UNFILLED = 0.15;
+
+    function getLayerOpacity(layerIndex, score) {
+      const clamped = Math.max(0, Math.min(score, 5));
+      if (clamped === 0) return ZERO_OPACITY;
+      const fillStart = 5 - layerIndex;
+      const fillEnd = 6 - layerIndex;
+      if (clamped <= fillStart) return UNFILLED;
+      if (clamped >= fillEnd) return 1;
+      const t = (clamped - fillStart) / (fillEnd - fillStart);
+      return UNFILLED + (1 - UNFILLED) * t;
+    }
+
+    function updateTree(score) {
+      const clamped = Math.max(0, Math.min(score, 5));
+
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById('layer' + i);
+        if (el) el.style.opacity = getLayerOpacity(i, clamped);
+      }
+
+      const trunk = document.getElementById('trunk');
+      if (trunk) {
+        trunk.style.opacity = clamped === 0 ? 0.2 : Math.min(1, 0.2 + 0.8 * clamped);
+      }
+
+      const displayVal = Math.round(clamped * 100) / 100;
+      document.getElementById('scoreDisplay').textContent = displayVal;
+      document.getElementById('sliderValue').textContent = displayVal;
+    }
+
+    const slider = document.getElementById('scoreSlider');
+    slider.addEventListener('input', function () {
+      const val = parseFloat(this.value, 10);
+      updateTree(val);
+    });
+
+    // Play animation: 0 → 1 over 2.2s (easing from TreeAnimationScreen)
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    document.getElementById('playAnimation').addEventListener('click', function () {
+      const btn = this;
+      btn.disabled = true;
+      slider.disabled = true;
+      const duration = 2200;
+      const startVal = parseFloat(slider.value, 10);
+      const endVal = Math.min(5, startVal + 1);
+      const startTime = performance.now();
+
+      function tick(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / duration);
+        const eased = easeInOutCubic(t);
+        const current = startVal + (endVal - startVal) * eased;
+        slider.value = current;
+        updateTree(current);
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          btn.disabled = false;
+          slider.disabled = false;
+        }
+      }
+      requestAnimationFrame(tick);
+    });
+
+    updateTree(2);
+  </script>
+</body>
+</html>

@@ -41,7 +41,7 @@ export default function TreeScreen({ navigation }) {
                 {/* Ground strip: instruction + score (stacked) */}
                 <View style={styles.ground}>
                 <Text style={styles.instructionText}>
-                    Every question you get right, your tree grows an inch. Every question you get wrong, it shrinks.
+                    Every question you get right, your tree grows. Every question you get wrong, it shrinks.
                 </Text>
                 <View style={styles.scoreBadge}>
                     <Text style={styles.scoreBadgeText}>Score: {score}</Text>
