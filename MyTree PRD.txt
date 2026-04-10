@@ -100,9 +100,8 @@ Tree Farm and leaderboard
 Dependencies & Assumptions
 
 I don’t know how long it’ll take to create infographics
-I might get busy with other things or get bored
 I’ve enjoyed vibe coding but I don’t know if I want to vibe code long term
-I’ll need a developer, climate expert and another designer.
+I’ll need a developer, climate enthusiasts and another designer.
 
 Risks & Open Questions
 
