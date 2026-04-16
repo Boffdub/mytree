@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppContext } from '../context/AppContext';
+import { useGameContext } from '../context/GameContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function AnswerScreen({ navigation, route }) {
     const insets = useSafeAreaInsets();
     const { question, selectedAnswer, category, questions, questionIndex, scoreAlreadyUpdated } = route.params || {};
-    const { score, incrementScore, decrementScore } = useAppContext();
+    const { score, incrementScore, decrementScore, saveAnswer, completeSession } = useGameContext();
     
     // Track which questions we've already scored to prevent double-counting
     const scoredQuestionsRef = useRef(new Set());
@@ -32,21 +32,31 @@ export default function AnswerScreen({ navigation, route }) {
     // Update score when a new question is shown (only score each question once)
     useEffect(() => {
         if (scoreAlreadyUpdated) return;
-        // Create a unique key for this question (category + question id)
         const questionKey = question ? `${category}-${question.id}-${questionIndex}` : null;
-        
+
         if (question && selectedAnswer !== null && questionKey && !scoredQuestionsRef.current.has(questionKey)) {
-            // Mark this question as scored
             scoredQuestionsRef.current.add(questionKey);
-            
-            // Update the score
+
+            // Persist the answer
+            const categoryKey = category === 'Energy' ? 'energy'
+                : category === 'Transportation' ? 'transportation'
+                : category === 'Food & Agriculture' ? 'foodAgriculture'
+                : category === 'Carbon Removal' ? 'carbonRemoval'
+                : category;
+            saveAnswer(categoryKey, question.id, selectedAnswer, isCorrect);
+
             if (isCorrect) {
                 incrementScore();
             } else {
                 decrementScore();
             }
+
+            // If this was the last question, complete the session
+            if (!hasNextQuestion) {
+                completeSession();
+            }
         }
-    }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore, scoreAlreadyUpdated]);
+    }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore, scoreAlreadyUpdated, saveAnswer, completeSession, hasNextQuestion]);
 
     return (
         <View style={styles.screenContainer}>
