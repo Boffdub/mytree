@@ -52,6 +52,9 @@ yarn-error.*
 # TypeScript
 *.tsbuildinfo
 
+# Git worktrees
+.worktrees/
+
 # IDE / editor (optional)
 .idea/
 .vscode/
