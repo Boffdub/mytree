@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from '../context/AuthContext';
+import { supabase } from '../services/supabase';
 import { useGameContext } from '../context/GameContext';
 import { GUEST_STORAGE_KEY } from '../services/storage';
 import { colors } from '../constants/colors';
@@ -28,19 +29,33 @@ export default function SettingsScreen({ navigation }) {
     ]);
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+    const doDelete = async () => {
+      try {
+        const { error } = await supabase.functions.invoke('delete-account');
+        if (error) throw error;
+        await signOut();
+        navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+      } catch (err) {
+        if (Platform.OS === 'web') {
+          window.alert('Deletion failed: ' + (err.message || 'Could not delete account'));
+        } else {
+          Alert.alert('Deletion failed', err.message || 'Could not delete account');
+        }
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm('This will permanently delete your account and all your progress. This cannot be undone.')) {
+        await doDelete();
+      }
+      return;
+    }
     Alert.alert(
       'Delete Account',
       'This will permanently delete your account and all your progress. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Account',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Coming soon', 'Account deletion will be wired up in Phase 3.');
-          },
-        },
+        { text: 'Delete Account', style: 'destructive', onPress: doDelete },
       ]
     );
   };
