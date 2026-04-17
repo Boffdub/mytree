@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from '../context/AuthContext';
@@ -14,16 +14,17 @@ export default function SettingsScreen({ navigation }) {
   const { resetScore } = useGameContext();
 
   const handleSignOut = async () => {
+    const doSignOut = async () => {
+      await signOut();
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to sign out?')) await doSignOut();
+      return;
+    }
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
-        },
-      },
+      { text: 'Sign Out', style: 'destructive', onPress: doSignOut },
     ]);
   };
 
@@ -45,20 +46,25 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const handleResetGuest = async () => {
+    const doReset = async () => {
+      await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
+      await resetScore();
+      if (Platform.OS === 'web') {
+        window.alert('Your progress has been cleared.');
+      } else {
+        Alert.alert('Reset complete', 'Your progress has been cleared.');
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm('This will clear your tree score and question history. Continue?')) await doReset();
+      return;
+    }
     Alert.alert(
       'Reset Progress',
       'This will clear your tree score and question history. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
-            await resetScore();
-            Alert.alert('Reset complete', 'Your progress has been cleared.');
-          },
-        },
+        { text: 'Reset', style: 'destructive', onPress: doReset },
       ]
     );
   };
