@@ -29,32 +29,32 @@ export default function AnswerScreen({ navigation, route }) {
     const correctAnswerText = question ? question.options[question.correct] : null;
     const correctAnswerIndex = question ? question.correct : null;
     
-    // Update score when a new question is shown (only score each question once)
     useEffect(() => {
-        if (scoreAlreadyUpdated) return;
         const questionKey = question ? `${category}-${question.id}-${questionIndex}` : null;
 
         if (question && selectedAnswer !== null && questionKey && !scoredQuestionsRef.current.has(questionKey)) {
             scoredQuestionsRef.current.add(questionKey);
 
-            // Persist the answer
             const categoryKey = category === 'Energy' ? 'energy'
                 : category === 'Transportation' ? 'transportation'
                 : category === 'Food & Agriculture' ? 'foodAgriculture'
                 : category === 'Carbon Removal' ? 'carbonRemoval'
                 : category;
-            saveAnswer(categoryKey, question.id, selectedAnswer, isCorrect);
 
-            if (isCorrect) {
-                incrementScore();
-            } else {
-                decrementScore();
-            }
-
-            // If this was the last question, complete the session
-            if (!hasNextQuestion) {
-                completeSession();
-            }
+            const persist = async () => {
+                await saveAnswer(categoryKey, question.id, selectedAnswer, isCorrect);
+                if (!scoreAlreadyUpdated) {
+                    if (isCorrect) {
+                        await incrementScore();
+                    } else {
+                        await decrementScore();
+                    }
+                }
+                if (!hasNextQuestion) {
+                    await completeSession();
+                }
+            };
+            persist();
         }
     }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore, scoreAlreadyUpdated, saveAnswer, completeSession, hasNextQuestion]);
 

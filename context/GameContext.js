@@ -23,6 +23,10 @@ export const GameProvider = ({ children }) => {
   const MAX_SCORE = 5;
 
   useEffect(() => {
+    if (auth.mode === 'loading' || auth.mode === 'welcome') {
+      setIsLoading(false);
+      return;
+    }
     let cancelled = false;
     setIsLoading(true);
     storage

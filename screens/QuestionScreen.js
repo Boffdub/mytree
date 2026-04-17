@@ -58,9 +58,13 @@ export default function QuestionScreen({ navigation, route }) {
 
     return (
         <View style={styles.screenContainer}>
-            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>         
+            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
                 <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.homeButton}>
+                        <Text style={styles.homeButtonText}>🏠</Text>
+                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>{category}</Text>
+                    <View style={styles.placeholder} />
                 </View>
             </View>
 
@@ -151,6 +155,14 @@ const styles = StyleSheet.create({
     // Empty view to balance the back button (centers the title)
     placeholder: {
         width: 40,
+    },
+    homeButton: {
+        width: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    homeButtonText: {
+        fontSize: 22,
     },
     
     // White/light body area
