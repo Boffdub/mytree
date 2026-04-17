@@ -32,7 +32,10 @@ export default function SettingsScreen({ navigation }) {
   const handleDeleteAccount = async () => {
     const doDelete = async () => {
       try {
-        const { error } = await supabase.functions.invoke('delete-account');
+        const { error } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', user.id);
         if (error) throw error;
         await signOut();
         navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
