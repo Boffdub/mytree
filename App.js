@@ -13,6 +13,7 @@ import {
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
 import WelcomeScreen from './screens/WelcomeScreen';
+import EmailSignInScreen from './screens/EmailSignInScreen';
 import MagicLinkSentScreen from './screens/MagicLinkSentScreen';
 import HomeScreen from './screens/HomeScreen';
 import CategoryScreen from './screens/CategoryScreen';
@@ -46,6 +47,7 @@ function AppNavigator() {
         screenOptions={{ cardStyle: { flex: 1 }, headerShown: false }}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="MagicLinkSent" component={MagicLinkSentScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Category" component={CategoryScreen} />

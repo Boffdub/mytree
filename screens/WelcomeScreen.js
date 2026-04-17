@@ -1,27 +1,44 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthContext } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function WelcomeScreen({ navigation }) {
-  const { continueAsGuest } = useAuthContext();
+  const { continueAsGuest, signInWithGoogle, mode } = useAuthContext();
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link)
+  useEffect(() => {
+    if (mode === 'auth' || mode === 'guest') {
+      navigation.replace('Home');
+    }
+  }, [mode]);
 
   const onAppleSignIn = () => {
-    Alert.alert('Coming soon', 'Sign in with Apple will be wired up in Phase 3.');
+    Alert.alert('Coming soon', 'Sign in with Apple is not yet available.');
   };
 
-  const onGoogleSignIn = () => {
-    Alert.alert('Coming soon', 'Sign in with Google will be wired up in Phase 3.');
+  const onGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // navigation handled by mode useEffect above
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const onEmailSignIn = () => {
-    Alert.alert('Coming soon', 'Magic link email will be wired up in Phase 3.');
+    navigation.navigate('EmailSignIn');
   };
 
-  const onGuest = () => {
-    continueAsGuest();
+  const onGuest = async () => {
+    await continueAsGuest();
+    navigation.replace('Home');
   };
 
   return (
@@ -41,8 +58,12 @@ export default function WelcomeScreen({ navigation }) {
           <Text style={styles.appleButtonText}>Sign in with Apple</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.googleButton} onPress={onGoogleSignIn}>
-          <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        <TouchableOpacity style={styles.googleButton} onPress={onGoogleSignIn} disabled={googleLoading}>
+          {googleLoading ? (
+            <ActivityIndicator color={colors.black} />
+          ) : (
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.emailButton} onPress={onEmailSignIn}>

@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuthContext } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function MagicLinkSentScreen({ navigation, route }) {
   const email = route.params?.email || 'your email';
+  const { mode } = useAuthContext();
+
+  // Navigate to Home when magic link is tapped and auth succeeds
+  useEffect(() => {
+    if (mode === 'auth') {
+      navigation.replace('Home');
+    }
+  }, [mode]);
 
   return (
     <LinearGradient colors={[colors.lightGreen, colors.white]} style={styles.container}>

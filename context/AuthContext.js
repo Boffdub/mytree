@@ -1,10 +1,32 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 const AuthContext = createContext();
 
 const GUEST_MODE_FLAG = '@mytree_guest_mode_active';
+export const REDIRECT_URI = Platform.OS === 'web'
+  ? 'http://localhost:8081'
+  : 'mytree://auth-callback';
+
+const parseSessionFromUrl = async (url) => {
+  if (!url) return;
+  const fragment = url.split('#')[1];
+  if (!fragment) return;
+  const params = {};
+  fragment.split('&').forEach((part) => {
+    const [key, val] = part.split('=');
+    if (key) params[decodeURIComponent(key)] = decodeURIComponent(val || '');
+  });
+  if (params.access_token && params.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: params.access_token,
+      refresh_token: params.refresh_token,
+    });
+  }
+};
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
@@ -21,9 +43,17 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    let subscription;
+    let authSubscription;
+    let linkingSubscription;
+
     const init = async () => {
       if (isSupabaseConfigured()) {
+        // Handle app opened from a cold start via deep link (magic link in email)
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          await parseSessionFromUrl(initialUrl);
+        }
+
         const { data } = await supabase.auth.getSession();
         if (data.session) {
           setSession(data.session);
@@ -31,11 +61,7 @@ export const AuthProvider = ({ children }) => {
           setMode('auth');
         } else {
           const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
-          if (guestFlag === 'true') {
-            setMode('guest');
-          } else {
-            setMode('welcome');
-          }
+          setMode(guestFlag === 'true' ? 'guest' : 'welcome');
         }
 
         const listener = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -49,21 +75,49 @@ export const AuthProvider = ({ children }) => {
             setMode('welcome');
           }
         });
-        subscription = listener.data.subscription;
+        authSubscription = listener.data.subscription;
+
+        // Handle deep link when app is already running (magic link tapped while app open)
+        linkingSubscription = Linking.addEventListener('url', ({ url }) => {
+          parseSessionFromUrl(url);
+        });
       } else {
         const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
         setMode(guestFlag === 'true' ? 'guest' : 'welcome');
       }
     };
+
     init();
+
     return () => {
-      if (subscription) subscription.unsubscribe();
+      if (authSubscription) authSubscription.unsubscribe();
+      if (linkingSubscription) linkingSubscription.remove();
     };
   }, []);
 
   const continueAsGuest = async () => {
     await AsyncStorage.setItem(GUEST_MODE_FLAG, 'true');
     setMode('guest');
+  };
+
+  const signInWithEmail = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: REDIRECT_URI },
+    });
+    if (error) throw error;
+  };
+
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: REDIRECT_URI, skipBrowserRedirect: true },
+    });
+    if (error) throw error;
+    const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+    if (result.type === 'success') {
+      await parseSessionFromUrl(result.url);
+    }
   };
 
   const signOut = async () => {
@@ -79,6 +133,8 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     continueAsGuest,
+    signInWithEmail,
+    signInWithGoogle,
     signOut,
   };
 
