@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { migrateGuestToAuth } from '../services/migration';
 
 const AuthContext = createContext();
 
@@ -64,8 +65,16 @@ export const AuthProvider = ({ children }) => {
           setMode(guestFlag === 'true' ? 'guest' : 'welcome');
         }
 
-        const listener = supabase.auth.onAuthStateChange((_event, newSession) => {
+        const listener = supabase.auth.onAuthStateChange(async (event, newSession) => {
           if (newSession) {
+            if (event === 'SIGNED_IN') {
+              try {
+                await migrateGuestToAuth(newSession.user.id);
+              } catch (err) {
+                console.error('[Auth] Migration failed:', err);
+              }
+              await AsyncStorage.removeItem(GUEST_MODE_FLAG);
+            }
             setSession(newSession);
             setUser(newSession.user);
             setMode('auth');
