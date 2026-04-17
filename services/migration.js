@@ -14,6 +14,16 @@ export async function migrateGuestToAuth(userId) {
     return;
   }
 
+  // Skip migration if the account already has existing data to avoid duplicates
+  const { count } = await supabase
+    .from('game_sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  if (count > 0) {
+    await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
+    return;
+  }
+
   for (const session of data.sessions) {
     const score = session.answers.filter((a) => a.isCorrect).length;
     const { data: inserted, error: insertError } = await supabase

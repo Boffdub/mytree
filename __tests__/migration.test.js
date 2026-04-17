@@ -43,7 +43,13 @@ describe('migrateGuestToAuth', () => {
     });
     const attemptInsert = jest.fn().mockResolvedValue({ error: null });
     supabase.from.mockImplementation((table) => {
-      if (table === 'game_sessions') return { insert: sessionInsert };
+      if (table === 'game_sessions') return {
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ count: 0 }),
+          single: jest.fn().mockResolvedValue({ data: { id: 'remote-session-1' }, error: null }),
+        }),
+        insert: sessionInsert,
+      };
       if (table === 'question_attempts') return { insert: attemptInsert };
       throw new Error(`Unexpected table: ${table}`);
     });
@@ -78,6 +84,42 @@ describe('migrateGuestToAuth', () => {
       },
     ]);
 
+    const raw = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
+    expect(raw).toBeNull();
+  });
+
+  test('skips migration and clears guest data if account already has sessions', async () => {
+    await AsyncStorage.setItem(
+      GUEST_STORAGE_KEY,
+      JSON.stringify({
+        guestId: 'guest-123',
+        score: 2,
+        sessions: [
+          {
+            id: 'local-1',
+            category: 'energy',
+            startedAt: '2026-04-15T10:00:00Z',
+            completedAt: '2026-04-15T10:05:00Z',
+            answers: [{ questionId: 1, selectedAnswer: 0, isCorrect: true, answeredAt: '2026-04-15T10:01:00Z' }],
+          },
+        ],
+      })
+    );
+
+    const insertSpy = jest.fn();
+    supabase.from.mockImplementation((table) => {
+      if (table === 'game_sessions') return {
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ count: 3 }),
+        }),
+        insert: insertSpy,
+      };
+      return { insert: insertSpy };
+    });
+
+    await migrateGuestToAuth('user-abc');
+
+    expect(insertSpy).not.toHaveBeenCalled();
     const raw = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
     expect(raw).toBeNull();
   });
