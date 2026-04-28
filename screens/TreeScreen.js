@@ -2,13 +2,13 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import TreeComponent from '../components/TreeComponent';
-import { useAppContext } from '../context/AppContext';
+import { useGameContext } from '../context/GameContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function TreeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-    const { score } = useAppContext();
+    const { score } = useGameContext();
 
 
     return (

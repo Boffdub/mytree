@@ -11,6 +11,12 @@ export default function HomeScreen({ navigation }) {
             style={styles.container}
         >
             <StatusBar style="auto" />
+            <TouchableOpacity
+                style={styles.settingsButton}
+                onPress={() => navigation.navigate('Settings')}
+            >
+                <Text style={styles.settingsIcon}>⚙️</Text>
+            </TouchableOpacity>
 
             {/* Tree Icon */}
             <View style={styles.treeContainer}>
@@ -113,5 +119,14 @@ const styles = StyleSheet.create({
         color: colors.primaryGreen,
         fontSize: 16,
         fontFamily: fonts.regular,
+    },
+    settingsButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        padding: 10,
+    },
+    settingsIcon: {
+        fontSize: 24,
     },
 });
