@@ -1,66 +1,49 @@
 # Local Setup
 
-## Prerequisites
+## Getting the app running
 
-- **Node.js** v18 or higher — [nodejs.org](https://nodejs.org/)
-- **Xcode** (Mac only) — required for iOS dev build
-- **Supabase account** — [supabase.com](https://supabase.com)
-- **Supabase CLI** — `npm install -g supabase`
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-> **Expo Go will not work.** Auth uses a custom URL scheme (`mytree://`) for OAuth and magic link callbacks, which Expo Go does not support. See [RUNNING.md](RUNNING.md) for how to run a dev build.
+2. **Create your `.env` file**
+   ```bash
+   cp .env.example .env
+   ```
 
-## 1. Install Dependencies
+3. **Fill in the credentials** — get these from the project owner:
+   ```
+   EXPO_PUBLIC_SUPABASE_URL=...
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+   ```
 
-```bash
-npm install
-```
+That's it. The database, auth configuration, and backend are already set up on the shared Supabase project. See [RUNNING.md](RUNNING.md) to start the app.
 
-## 2. Environment Variables
+---
 
-```bash
-cp .env.example .env
-```
+## One-time project setup (already done — for reference only)
 
-Fill in your Supabase credentials — find these in your Supabase dashboard under **Project Settings → API**:
+This section documents what was done to configure the Supabase project. You do not need to do any of this as a new developer joining the team.
 
-```
-EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+### Database schema
 
-## 3. Database Schema
+The contents of `supabase/schema.sql` were applied in the Supabase SQL Editor. This created the `profiles`, `game_sessions`, and `question_attempts` tables with RLS policies.
 
-Run the contents of `supabase/schema.sql` in the Supabase **SQL Editor** (dashboard → SQL Editor → New query). This creates the `profiles`, `game_sessions`, and `question_attempts` tables with RLS policies.
+### Auth providers
 
-## 4. Auth Providers
+Configured in Supabase under **Authentication → Providers**:
 
-In your Supabase dashboard under **Authentication → Providers**:
+- **Email**: enabled, magic link (OTP) flow
+- **Google**: enabled with OAuth credentials from Google Cloud Console
 
-- **Email**: enable, keep "Confirm email" on (this enables magic link / OTP flow)
-- **Google**: enable, then:
-  1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com) (OAuth 2.0 Client ID, type: Web)
-  2. Add `https://your-project.supabase.co/auth/v1/callback` as an authorized redirect URI in Google
-  3. Paste the Client ID and Secret into Supabase
+### Redirect URLs
 
-## 5. Redirect URLs
-
-In Supabase under **Authentication → URL Configuration → Redirect URLs**, add:
+Added in Supabase under **Authentication → URL Configuration → Redirect URLs**:
 
 - `mytree://auth-callback` (native deep link)
 - `http://localhost:8081` (web dev server)
 
-## 6. Deploy the Delete-Account Edge Function
+### Edge Function
 
-```bash
-supabase login
-supabase link         # select your project when prompted
-supabase functions deploy delete-account
-```
-
-Then add your **Service Role Key** as a secret — in the Supabase dashboard go to **Edge Functions → Manage secrets** and add:
-
-```
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-The service role key is found in **Project Settings → API → Service role key** (keep this secret — never put it in `.env` or commit it).
+A `delete-account` Edge Function exists in `supabase/functions/` but is not currently in use due to a platform-level incompatibility between Supabase Edge Functions and ES256 JWT tokens. Account deletion is handled via direct database deletion instead.

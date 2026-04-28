@@ -1,6 +1,6 @@
 # Running the App
 
-Complete [SETUP.md](SETUP.md) before running for the first time.
+Make sure you've completed the local setup in [SETUP.md](SETUP.md) (install dependencies and add your `.env`) before running for the first time.
 
 ## Web (recommended for local development)
 
