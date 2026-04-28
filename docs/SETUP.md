@@ -1,5 +1,13 @@
 # Local Setup
 
+## Prerequisites
+
+Install these before anything else:
+
+- **Node.js** v18 or higher — [nodejs.org](https://nodejs.org/)
+- **Xcode** (Mac only, required for iOS simulator) — install from the Mac App Store, then open it once to accept the license agreement
+- **Expo CLI** — `npm install -g expo-cli` (or just use `npx expo` without installing globally)
+
 ## Getting the app running
 
 1. **Install dependencies**

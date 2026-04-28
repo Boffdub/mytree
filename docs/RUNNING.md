@@ -12,7 +12,7 @@ Opens at `http://localhost:8081`. Magic links will redirect back to this URL aut
 
 ## iOS Dev Build
 
-Expo Go does not support the `mytree://` custom URL scheme required for native magic links and Google OAuth. You need a dev build instead.
+Expo Go does not support the `mytree://` custom URL scheme required for native magic links and Google OAuth. You need a dev build instead. Requires Xcode (from the Mac App Store) and command line tools (`xcode-select --install`).
 
 **First time (compiles native code — takes several minutes):**
 
