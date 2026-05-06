@@ -52,7 +52,7 @@ CREATE POLICY "Users select own profile" ON public.profiles
 CREATE POLICY "Users insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users update own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users delete own profile" ON public.profiles
   FOR DELETE USING (auth.uid() = id);
 
@@ -62,7 +62,7 @@ CREATE POLICY "Users select own sessions" ON public.game_sessions
 CREATE POLICY "Users insert own sessions" ON public.game_sessions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users update own sessions" ON public.game_sessions
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users delete own sessions" ON public.game_sessions
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -72,7 +72,7 @@ CREATE POLICY "Users select own attempts" ON public.question_attempts
 CREATE POLICY "Users insert own attempts" ON public.question_attempts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users update own attempts" ON public.question_attempts
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users delete own attempts" ON public.question_attempts
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -91,7 +91,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
