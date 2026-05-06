@@ -33,6 +33,9 @@ jobs:
         run: npm ci
 
       - name: Export web build
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: npx expo export --platform web
 
       - name: Update docs from dist
