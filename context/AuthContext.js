@@ -8,11 +8,10 @@ import { migrateGuestToAuth } from '../services/migration';
 const AuthContext = createContext();
 
 const GUEST_MODE_FLAG = '@mytree_guest_mode_active';
-export const REDIRECT_URI = Platform.OS === 'web'
-  ? (typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'http://localhost:8081')
-  : 'mytree://auth-callback';
+const _webBase = typeof window !== 'undefined' && window.location?.origin
+  ? window.location.origin + (process.env.EXPO_PUBLIC_WEB_BASE_PATH || '')
+  : 'http://localhost:8081';
+export const REDIRECT_URI = Platform.OS === 'web' ? _webBase : 'mytree://auth-callback';
 
 const parseSessionFromUrl = async (url) => {
   if (!url) return;
