@@ -93,10 +93,11 @@ export default function QuestionScreen({ navigation, route }) {
                             </TouchableOpacity>
                         ))}
 
-                        {/* Submit Button - only shows when an answer is selected */}
+                        {/* Submit Button - only shows when an answer is selected and session is ready */}
                         {selectedAnswer !== null && (
-                            <TouchableOpacity 
-                                style={styles.submitButton}
+                            <TouchableOpacity
+                                style={[styles.submitButton, !currentSessionId && styles.submitButtonDisabled]}
+                                disabled={!currentSessionId}
                                 onPress={() => {
                                     navigation.navigate('TreeAnimation', {
                                         fromScore: score,
@@ -224,6 +225,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         fontFamily: fonts.bold,
+    },
+    submitButtonDisabled: {
+        opacity: 0.5,
     },
     
     // Loading state
