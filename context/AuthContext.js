@@ -9,7 +9,9 @@ const AuthContext = createContext();
 
 const GUEST_MODE_FLAG = '@mytree_guest_mode_active';
 export const REDIRECT_URI = Platform.OS === 'web'
-  ? 'http://localhost:8081'
+  ? (typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'http://localhost:8081')
   : 'mytree://auth-callback';
 
 const parseSessionFromUrl = async (url) => {
