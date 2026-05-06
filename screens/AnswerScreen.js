@@ -54,7 +54,7 @@ export default function AnswerScreen({ navigation, route }) {
                     await completeSession();
                 }
             };
-            persist();
+            persist().catch((err) => console.error('[AnswerScreen] persist failed:', err));
         }
     }, [question?.id, questionIndex, category, selectedAnswer, isCorrect, incrementScore, decrementScore, scoreAlreadyUpdated, saveAnswer, completeSession, hasNextQuestion]);
 
