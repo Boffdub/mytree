@@ -15,10 +15,11 @@ export async function migrateGuestToAuth(userId) {
   }
 
   // Skip migration if the account already has existing data to avoid duplicates
-  const { count } = await supabase
+  const { count, error: countError } = await supabase
     .from('game_sessions')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId);
+  if (countError) throw new Error(`Migration check failed: ${countError.message}`);
   if (count > 0) {
     await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
     return;
