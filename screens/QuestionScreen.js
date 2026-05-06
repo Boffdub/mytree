@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppContext } from '../context/AppContext';
+import { useGameContext } from '../context/GameContext';
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -35,32 +35,36 @@ export default function QuestionScreen({ navigation, route }) {
     // State for which question number you're on (0 = first question)
     const [questionIndex, setQuestionIndex] = useState(0);
 
+    const { score, startSession, currentSessionId } = useGameContext();
+
     useEffect(() => {
-        // Convert display name to data key
         const categoryKey = mapCategoryToKey(category);
-        
-        // Get all questions for this category
         const categoryQuestions = getQuestionsByCategory(categoryKey);
         setQuestions(categoryQuestions);
-        
-        // Get question index from route params (if navigating from AnswerScreen)
+
         const indexFromRoute = route.params?.questionIndex ?? 0;
         setQuestionIndex(indexFromRoute);
-        
-        // Set the current question based on index
+
         if (categoryQuestions.length > 0 && indexFromRoute < categoryQuestions.length) {
             setCurrentQuestion(categoryQuestions[indexFromRoute]);
-            setSelectedAnswer(null); // Reset selected answer when question changes
+            setSelectedAnswer(null);
+        }
+
+        // Start a new session when entering the first question (index 0)
+        if (indexFromRoute === 0 && !currentSessionId) {
+            startSession(categoryKey);
         }
     }, [category, route.params?.questionIndex]);
-    
-    const { score } = useAppContext();
 
     return (
         <View style={styles.screenContainer}>
-            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>         
+            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
                 <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.homeButton}>
+                        <Text style={styles.homeButtonText}>🏠</Text>
+                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>{category}</Text>
+                    <View style={styles.placeholder} />
                 </View>
             </View>
 
@@ -89,10 +93,11 @@ export default function QuestionScreen({ navigation, route }) {
                             </TouchableOpacity>
                         ))}
 
-                        {/* Submit Button - only shows when an answer is selected */}
+                        {/* Submit Button - only shows when an answer is selected and session is ready */}
                         {selectedAnswer !== null && (
-                            <TouchableOpacity 
-                                style={styles.submitButton}
+                            <TouchableOpacity
+                                style={[styles.submitButton, !currentSessionId && styles.submitButtonDisabled]}
+                                disabled={!currentSessionId}
                                 onPress={() => {
                                     navigation.navigate('TreeAnimation', {
                                         fromScore: score,
@@ -151,6 +156,14 @@ const styles = StyleSheet.create({
     // Empty view to balance the back button (centers the title)
     placeholder: {
         width: 40,
+    },
+    homeButton: {
+        width: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    homeButtonText: {
+        fontSize: 22,
     },
     
     // White/light body area
@@ -212,6 +225,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         fontFamily: fonts.bold,
+    },
+    submitButtonDisabled: {
+        opacity: 0.5,
     },
     
     // Loading state

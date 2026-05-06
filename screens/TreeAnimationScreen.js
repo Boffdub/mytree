@@ -3,14 +3,14 @@ import { View, StyleSheet, Animated, Easing, Text, TouchableOpacity } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import TreeComponent from '../components/TreeComponent';
-import { useAppContext } from '../context/AppContext';
+import { useGameContext } from '../context/GameContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function TreeAnimationScreen({ navigation, route }) {
     const insets = useSafeAreaInsets();
     const { fromScore = 0, isCorrect, question, selectedAnswer, category, questions, questionIndex } = route.params || {};
-    const { incrementScore, decrementScore } = useAppContext();
+    const { incrementScore, decrementScore } = useGameContext();
     const toScore = Math.max(0, Math.min(fromScore + (isCorrect ? 1 : -1), 5));
 
     const animValue = useRef(new Animated.Value(fromScore)).current;
