@@ -74,7 +74,7 @@ export default function OnboardingScreen({ navigation, route }) {
     }
   };
 
-  const renderSlide = ({ item }) => (
+  const renderSlide = useCallback(({ item }) => (
     <LinearGradient
       colors={[colors.lightGreen, colors.white]}
       style={[styles.slide, { width }]}
@@ -108,7 +108,7 @@ export default function OnboardingScreen({ navigation, route }) {
         <Text style={styles.caption}>{item.caption}</Text>
       )}
     </LinearGradient>
-  );
+  ), [width, insets]);
 
   return (
     <View style={styles.container}>
@@ -159,13 +159,13 @@ export default function OnboardingScreen({ navigation, route }) {
       {/* Bottom: dots or Get Started */}
       {isLast ? (
         <TouchableOpacity
-          style={[styles.getStartedButton, { marginBottom: insets.bottom + 24 }]}
+          style={[styles.getStartedButton, { bottom: insets.bottom + 24 }]}
           onPress={handleSkipOrFinish}
         >
           <Text style={styles.getStartedText}>Get Started</Text>
         </TouchableOpacity>
       ) : (
-        <View style={[styles.dotsRow, { marginBottom: insets.bottom + 24 }]}>
+        <View style={[styles.dotsRow, { bottom: insets.bottom + 24 }]}>
           {ONBOARDING_SLIDES.map((_, i) => (
             <View
               key={i}
