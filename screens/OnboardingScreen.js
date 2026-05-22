@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -24,43 +24,48 @@ const ONBOARDING_SLIDES = [
       "Depending on the difficulty you choose, wrong answers might make your tree shrink. You'll pick your level after you log in.",
   },
   { score: 5, caption: 'You grow a full tree when you get 5 correct questions in a row.' },
-  { score: 5, showLifelines: true },
+  {
+    score: 5,
+    showLifelines: true,
+    caption: 'You get 3 lifelines to help you but the available lifelines depend on the difficulty you choose.',
+  },
 ];
 
 const LIFELINES = [
-  {
-    label: '5050',
-    name: '50/50',
-    description: '2 of the wrong choices will be removed',
-  },
-  {
-    label: '📊',
-    name: 'Infographics',
-    description: "We'll show an infographic that could help you",
-  },
-  {
-    label: '🛡',
-    name: 'Shield',
-    description: 'Your tree will not shrink for at least 1 question',
-  },
+  { label: '5050', name: '50/50', description: '2 of the wrong choices will be removed' },
+  { label: '📊', name: 'Infographics', description: "We'll show an infographic that could help you" },
+  { label: '🛡', name: 'Shield', description: 'Your tree will not shrink for at least 1 question' },
 ];
 
+// Section proportions — sum to 100. Tune these to redistribute vertical space.
+const HEADER_FLEX = 22;
+const IMAGE_FLEX = 50;
+const CAPTION_FLEX = 10;
+const BUTTON_FLEX = 18;
+
+// Tree's natural rendered size (from TreeComponent at scale 1)
+const TREE_NATURAL_HEIGHT = 600;
+const TREE_NATURAL_WIDTH = 340;
+// Fraction of available content height the tree should occupy
+const TREE_HEIGHT_FRACTION = 0.40;
+// Logo as fraction of available content height
+const LOGO_FRACTION = 0.095;
+
 export default function OnboardingScreen({ navigation, route }) {
-  const { markOnboardingSeen, mode } = useAuthContext();
-  const { width } = useWindowDimensions();
+  const { markOnboardingSeen } = useAuthContext();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const returnTo = route?.params?.returnTo || 'Welcome';
-  const isLast = currentIndex === ONBOARDING_SLIDES.length - 1;
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      setCurrentIndex(viewableItems[0].index);
-    }
-  }, []);
+  const padTop = insets.top + 16;
+  const padBottom = insets.bottom + 16;
+  const availableHeight = height - padTop - padBottom;
 
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
+  const treeBoxHeight = Math.round(availableHeight * TREE_HEIGHT_FRACTION);
+  const treeScale = treeBoxHeight / TREE_NATURAL_HEIGHT;
+  const treeBoxWidth = Math.round(TREE_NATURAL_WIDTH * treeScale + 16);
+  const logoSize = Math.round(availableHeight * LOGO_FRACTION);
 
   const goToIndex = (index) => {
     flatListRef.current?.scrollToIndex({ index, animated: true });
@@ -75,30 +80,9 @@ export default function OnboardingScreen({ navigation, route }) {
     }
   };
 
-  const renderSlide = useCallback(({ item }) => (
-    <LinearGradient
-      colors={[colors.lightGreen, colors.white]}
-      style={[styles.slide, { width }]}
-    >
-      <View style={[styles.slideHeader, { paddingTop: insets.top + 12 }]}>
-        <Image
-          source={require('../assets/image/My_Tree_Logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.slideTitle}>My Tree</Text>
-        <Text style={styles.slideTagline}>
-          Answer questions about the climate to grow your virtual tree!
-        </Text>
-      </View>
-
-      <View style={styles.treeArea}>
-        <View style={styles.treeScaleWrapper}>
-          <TreeComponent score={item.score} showGround={false} />
-        </View>
-      </View>
-
-      {item.showLifelines ? (
+  const renderImageContent = (item) => {
+    if (item.showLifelines) {
+      return (
         <View style={styles.lifelineContainer}>
           {LIFELINES.map((lifeline) => (
             <View key={lifeline.name} style={styles.lifelineRow}>
@@ -119,118 +103,155 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
             </View>
           ))}
-          <Text style={styles.caption}>
-            You get 3 lifelines to help you but the available lifelines depend on the difficulty you choose.
+        </View>
+      );
+    }
+    return (
+      <View style={[styles.treeBox, { width: treeBoxWidth, height: treeBoxHeight }]}>
+        <View style={{ transform: [{ scale: treeScale }] }}>
+          <TreeComponent score={item.score} showGround={false} />
+        </View>
+      </View>
+    );
+  };
+
+  const renderSlide = useCallback(({ item, index }) => {
+    const isFirst = index === 0;
+    const isLast = index === ONBOARDING_SLIDES.length - 1;
+
+    return (
+      <LinearGradient
+        colors={[colors.lightGreen, colors.white]}
+        style={[styles.slide, { width, height, paddingTop: padTop, paddingBottom: padBottom }]}
+      >
+        {/* Section 1: Header */}
+        <View style={styles.header}>
+          <Image
+            source={require('../assets/image/My_Tree_Logo.png')}
+            style={[styles.logo, { width: logoSize, height: logoSize }]}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>My Tree</Text>
+          <Text style={styles.tagline}>
+            Answer questions about the climate to grow your virtual tree!
           </Text>
         </View>
-      ) : (
-        <Text style={styles.caption}>{item.caption}</Text>
-      )}
-    </LinearGradient>
-  ), [width, insets]);
+
+        {/* Section 2: Image area with arrows */}
+        <View style={styles.imageSection}>
+          <View style={styles.arrowSlot}>
+            {!isFirst && (
+              <TouchableOpacity onPress={() => goToIndex(index - 1)} style={styles.arrowHit}>
+                <Text style={styles.arrowText}>◄</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.imageCenter}>{renderImageContent(item)}</View>
+          <View style={styles.arrowSlot}>
+            {!isLast && (
+              <TouchableOpacity onPress={() => goToIndex(index + 1)} style={styles.arrowHit}>
+                <Text style={styles.arrowText}>►</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Section 3: Caption */}
+        <View style={styles.captionSection}>
+          <Text style={styles.caption}>{item.caption}</Text>
+        </View>
+
+        {/* Section 4: Buttons */}
+        <View style={styles.buttonSection}>
+          <TouchableOpacity style={styles.registerButton} onPress={handleAuthExit}>
+            <Text style={styles.registerButtonText}>Register</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.loginButton} onPress={handleAuthExit}>
+            <Text style={styles.loginButtonText}>Log In</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    );
+  }, [width, height, insets, treeBoxWidth, treeBoxHeight, treeScale, logoSize, padTop, padBottom]);
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={ONBOARDING_SLIDES}
-        renderItem={renderSlide}
-        keyExtractor={(_, i) => String(i)}
-        horizontal
-        pagingEnabled
-        scrollEnabled
-        showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig.current}
-        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
-      />
-
-      {/* Prev arrow */}
-      {currentIndex > 0 && (
-        <TouchableOpacity
-          style={styles.prevArrow}
-          onPress={() => goToIndex(currentIndex - 1)}
-        >
-          <Text style={styles.arrowText}>◄</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Next arrow — slides 1–4 only */}
-      {!isLast && (
-        <TouchableOpacity
-          style={styles.nextArrow}
-          onPress={() => goToIndex(currentIndex + 1)}
-        >
-          <Text style={styles.arrowText}>►</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Register / Log In buttons — every slide */}
-      <View style={[styles.authButtonContainer, { bottom: insets.bottom + 16 }]}>
-        <TouchableOpacity style={styles.registerButton} onPress={handleAuthExit}>
-          <Text style={styles.registerButtonText}>Register</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton} onPress={handleAuthExit}>
-          <Text style={styles.loginButtonText}>Log In</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <FlatList
+      style={styles.flatList}
+      ref={flatListRef}
+      data={ONBOARDING_SLIDES}
+      renderItem={renderSlide}
+      keyExtractor={(_, i) => String(i)}
+      horizontal
+      pagingEnabled
+      scrollEnabled
+      showsHorizontalScrollIndicator={false}
+      getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
+  flatList: {
+    flex: 1,
+  },
   slide: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 140,
   },
-  slideHeader: {
+
+  // Section 1: Header
+  header: {
+    flex: HEADER_FLEX,
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
   },
   logo: {
-    width: 90,
-    height: 90,
     marginBottom: 8,
   },
-  slideTitle: {
+  title: {
     fontSize: 28,
     color: colors.primaryGreen,
     fontFamily: fonts.bold,
     marginBottom: 4,
   },
-  slideTagline: {
+  tagline: {
     fontSize: 14,
     color: colors.gray,
     textAlign: 'center',
     fontFamily: fonts.regular,
   },
 
-  treeArea: {
-    flex: 1,
-    justifyContent: 'center',
+  // Section 2: Image area
+  imageSection: {
+    flex: IMAGE_FLEX,
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  arrowSlot: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowHit: {
+    padding: 8,
+  },
+  arrowText: {
+    fontSize: 20,
+    color: colors.primaryGreen,
+  },
+  imageCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  treeBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
   },
-  treeScaleWrapper: {
-    transform: [{ scale: 0.55 }],
-  },
-
-  caption: {
-    fontSize: 14,
-    color: colors.gray,
-    textAlign: 'center',
-    fontFamily: fonts.regular,
-    lineHeight: 20,
-    paddingHorizontal: 8,
-    marginTop: 12,
-  },
-
   lifelineContainer: {
-    marginTop: 12,
-    gap: 12,
+    width: '100%',
+    gap: 14,
   },
   lifelineRow: {
     flexDirection: 'row',
@@ -278,27 +299,24 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
 
-  prevArrow: {
-    position: 'absolute',
-    left: 8,
-    top: '40%',
-    padding: 8,
+  // Section 3: Caption
+  captionSection: {
+    flex: CAPTION_FLEX,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  nextArrow: {
-    position: 'absolute',
-    right: 8,
-    top: '40%',
-    padding: 8,
-  },
-  arrowText: {
-    fontSize: 20,
-    color: colors.primaryGreen,
+  caption: {
+    fontSize: 14,
+    color: colors.gray,
+    textAlign: 'center',
+    fontFamily: fonts.regular,
+    lineHeight: 20,
   },
 
-  authButtonContainer: {
-    position: 'absolute',
-    left: 24,
-    right: 24,
+  // Section 4: Buttons
+  buttonSection: {
+    flex: BUTTON_FLEX,
+    justifyContent: 'flex-end',
   },
   registerButton: {
     backgroundColor: colors.primaryGreen,

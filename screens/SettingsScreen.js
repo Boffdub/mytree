@@ -124,6 +124,10 @@ export default function SettingsScreen({ navigation }) {
               <Text style={styles.buttonText}>Sign Out</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
+              <Text style={styles.buttonText}>How to Play</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
               <Text style={styles.dangerButtonText}>Delete Account</Text>
             </TouchableOpacity>
@@ -142,15 +146,15 @@ export default function SettingsScreen({ navigation }) {
               <Text style={styles.primaryButtonText}>Sign in to save progress</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
+              <Text style={styles.buttonText}>How to Play</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.dangerButton} onPress={handleResetGuest}>
               <Text style={styles.dangerButtonText}>Reset Progress</Text>
             </TouchableOpacity>
           </>
         )}
-
-        <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
-          <Text style={styles.buttonText}>How to Play</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
