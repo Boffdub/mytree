@@ -1,3 +1,8 @@
+jest.mock('../services/supabase', () => ({
+  supabase: {},
+  isSupabaseConfigured: () => false,
+}));
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { markOnboardingSeen, hasSeenOnboardingStored, ONBOARDING_KEY } from '../context/AuthContext';
 
