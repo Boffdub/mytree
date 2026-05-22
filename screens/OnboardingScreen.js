@@ -45,7 +45,7 @@ const LIFELINES = [
 ];
 
 export default function OnboardingScreen({ navigation, route }) {
-  const { markOnboardingSeen } = useAuthContext();
+  const { markOnboardingSeen, mode } = useAuthContext();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef(null);
@@ -69,6 +69,8 @@ export default function OnboardingScreen({ navigation, route }) {
     await markOnboardingSeen();
     if (returnTo === 'Settings') {
       navigation.goBack();
+    } else if (mode === 'auth' || mode === 'guest') {
+      navigation.replace('Home');
     } else {
       navigation.replace('Welcome');
     }
@@ -283,7 +285,6 @@ const styles = StyleSheet.create({
 
   dotsRow: {
     position: 'absolute',
-    bottom: 0,
     alignSelf: 'center',
     flexDirection: 'row',
     gap: 8,
@@ -300,7 +301,6 @@ const styles = StyleSheet.create({
 
   getStartedButton: {
     position: 'absolute',
-    bottom: 0,
     alignSelf: 'center',
     backgroundColor: colors.primaryGreen,
     paddingVertical: 15,
