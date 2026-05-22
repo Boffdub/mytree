@@ -93,7 +93,9 @@ export default function OnboardingScreen({ navigation, route }) {
       </View>
 
       <View style={styles.treeArea}>
-        <TreeComponent score={item.score} showGround={false} />
+        <View style={styles.treeScaleWrapper}>
+          <TreeComponent score={item.score} showGround={false} />
+        </View>
       </View>
 
       {item.showLifelines ? (
@@ -209,6 +211,11 @@ const styles = StyleSheet.create({
   treeArea: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  treeScaleWrapper: {
+    transform: [{ scale: 0.55 }],
   },
 
   caption: {
