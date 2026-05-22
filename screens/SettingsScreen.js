@@ -91,6 +91,10 @@ export default function SettingsScreen({ navigation }) {
     navigation.navigate('Welcome');
   };
 
+  const handleHowToPlay = () => {
+    navigation.navigate('Onboarding', { returnTo: 'Settings' });
+  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
@@ -143,6 +147,10 @@ export default function SettingsScreen({ navigation }) {
             </TouchableOpacity>
           </>
         )}
+
+        <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
+          <Text style={styles.buttonText}>How to Play</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
