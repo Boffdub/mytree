@@ -6,6 +6,7 @@ import {
   FlatList,
   StyleSheet,
   useWindowDimensions,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,17 +29,17 @@ const ONBOARDING_SLIDES = [
 
 const LIFELINES = [
   {
-    label: '50/50',
+    label: '5050',
     name: '50/50',
     description: '2 of the wrong choices will be removed',
   },
   {
-    label: '[ ]',
+    label: '📊',
     name: 'Infographics',
     description: "We'll show an infographic that could help you",
   },
   {
-    label: '( )',
+    label: '🛡',
     name: 'Shield',
     description: 'Your tree will not shrink for at least 1 question',
   },
@@ -65,12 +66,10 @@ export default function OnboardingScreen({ navigation, route }) {
     flatListRef.current?.scrollToIndex({ index, animated: true });
   };
 
-  const handleSkipOrFinish = async () => {
+  const handleAuthExit = async () => {
     await markOnboardingSeen();
     if (returnTo === 'Settings') {
       navigation.goBack();
-    } else if (mode === 'auth' || mode === 'guest') {
-      navigation.replace('Home');
     } else {
       navigation.replace('Welcome');
     }
@@ -82,6 +81,11 @@ export default function OnboardingScreen({ navigation, route }) {
       style={[styles.slide, { width }]}
     >
       <View style={[styles.slideHeader, { paddingTop: insets.top + 12 }]}>
+        <Image
+          source={require('../assets/image/My_Tree_Logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.slideTitle}>My Tree</Text>
         <Text style={styles.slideTagline}>
           Answer questions about the climate to grow your virtual tree!
@@ -97,7 +101,15 @@ export default function OnboardingScreen({ navigation, route }) {
           {LIFELINES.map((lifeline) => (
             <View key={lifeline.name} style={styles.lifelineRow}>
               <View style={styles.lifelineIcon}>
-                <Text style={styles.lifelineIconText}>{lifeline.label}</Text>
+                {lifeline.label === '5050' ? (
+                  <View style={styles.lifelineFiftyFifty}>
+                    <Text style={styles.lifelineFiftyText}>50</Text>
+                    <View style={styles.lifelineFiftyDivider} />
+                    <Text style={styles.lifelineFiftyText}>50</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.lifelineEmojiText}>{lifeline.label}</Text>
+                )}
               </View>
               <View style={styles.lifelineText}>
                 <Text style={styles.lifelineName}>{lifeline.name}</Text>
@@ -105,6 +117,9 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
             </View>
           ))}
+          <Text style={styles.caption}>
+            You get 3 lifelines to help you but the available lifelines depend on the difficulty you choose.
+          </Text>
         </View>
       ) : (
         <Text style={styles.caption}>{item.caption}</Text>
@@ -128,16 +143,6 @@ export default function OnboardingScreen({ navigation, route }) {
         getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
       />
 
-      {/* Skip button — slides 1–4 only */}
-      {!isLast && (
-        <TouchableOpacity
-          style={[styles.skipButton, { top: insets.top + 12 }]}
-          onPress={handleSkipOrFinish}
-        >
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      )}
-
       {/* Prev arrow */}
       {currentIndex > 0 && (
         <TouchableOpacity
@@ -158,24 +163,15 @@ export default function OnboardingScreen({ navigation, route }) {
         </TouchableOpacity>
       )}
 
-      {/* Bottom: dots or Get Started */}
-      {isLast ? (
-        <TouchableOpacity
-          style={[styles.getStartedButton, { bottom: insets.bottom + 24 }]}
-          onPress={handleSkipOrFinish}
-        >
-          <Text style={styles.getStartedText}>Get Started</Text>
+      {/* Register / Log In buttons — every slide */}
+      <View style={[styles.authButtonContainer, { bottom: insets.bottom + 16 }]}>
+        <TouchableOpacity style={styles.registerButton} onPress={handleAuthExit}>
+          <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
-      ) : (
-        <View style={[styles.dotsRow, { bottom: insets.bottom + 24 }]}>
-          {ONBOARDING_SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, i === currentIndex && styles.dotActive]}
-            />
-          ))}
-        </View>
-      )}
+        <TouchableOpacity style={styles.loginButton} onPress={handleAuthExit}>
+          <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -186,11 +182,16 @@ const styles = StyleSheet.create({
   slide: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 100,
+    paddingBottom: 140,
   },
   slideHeader: {
     alignItems: 'center',
     marginBottom: 12,
+  },
+  logo: {
+    width: 90,
+    height: 90,
+    marginBottom: 8,
   },
   slideTitle: {
     fontSize: 28,
@@ -230,18 +231,32 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   lifelineIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: colors.primaryGreen,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  lifelineIconText: {
-    fontSize: 10,
+  lifelineFiftyFifty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lifelineFiftyText: {
+    fontSize: 9,
     color: colors.primaryGreen,
     fontFamily: fonts.bold,
+    lineHeight: 11,
+  },
+  lifelineFiftyDivider: {
+    width: 20,
+    height: 1,
+    backgroundColor: colors.primaryGreen,
+    marginVertical: 1,
+  },
+  lifelineEmojiText: {
+    fontSize: 20,
     textAlign: 'center',
   },
   lifelineText: { flex: 1 },
@@ -256,26 +271,16 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
 
-  skipButton: {
-    position: 'absolute',
-    right: 20,
-  },
-  skipText: {
-    fontSize: 14,
-    color: colors.gray,
-    fontFamily: fonts.semiBold,
-  },
-
   prevArrow: {
     position: 'absolute',
     left: 8,
-    top: '45%',
+    top: '40%',
     padding: 8,
   },
   nextArrow: {
     position: 'absolute',
     right: 8,
-    top: '45%',
+    top: '40%',
     padding: 8,
   },
   arrowText: {
@@ -283,32 +288,33 @@ const styles = StyleSheet.create({
     color: colors.primaryGreen,
   },
 
-  dotsRow: {
+  authButtonContainer: {
     position: 'absolute',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    gap: 8,
+    left: 24,
+    right: 24,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.grayLight,
-  },
-  dotActive: {
-    backgroundColor: colors.primaryGreen,
-  },
-
-  getStartedButton: {
-    position: 'absolute',
-    alignSelf: 'center',
+  registerButton: {
     backgroundColor: colors.primaryGreen,
     paddingVertical: 15,
-    paddingHorizontal: 48,
     borderRadius: 25,
+    marginBottom: 10,
+    alignItems: 'center',
   },
-  getStartedText: {
+  registerButtonText: {
     color: colors.white,
+    fontSize: 16,
+    fontFamily: fonts.bold,
+  },
+  loginButton: {
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.primaryGreen,
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: colors.primaryGreen,
     fontSize: 16,
     fontFamily: fonts.bold,
   },
