@@ -1,11 +1,10 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  useWindowDimensions,
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,25 +45,40 @@ const BUTTON_FLEX = 18;
 // Tree's natural rendered size (from TreeComponent at scale 1)
 const TREE_NATURAL_HEIGHT = 600;
 const TREE_NATURAL_WIDTH = 340;
-// Fraction of available content height the tree should occupy
+// Tree visual dimensions as fractions of available content height.
+// Width and height are independent so the tree can stretch vertically
+// to fill the image section without growing wider.
+const TREE_WIDTH_FRACTION = 0.28;
 const TREE_HEIGHT_FRACTION = 0.40;
 // Logo as fraction of available content height
 const LOGO_FRACTION = 0.095;
 
 export default function OnboardingScreen({ navigation, route }) {
   const { markOnboardingSeen } = useAuthContext();
-  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef(null);
   const returnTo = route?.params?.returnTo || 'Welcome';
 
+  // Measure the actual container size so we respect any parent maxWidth
+  // (App.js applies maxWidth: 420 on wide screens). useWindowDimensions
+  // would give the viewport size, which overflows the constrained container.
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const onContainerLayout = (e) => {
+    const { width: w, height: h } = e.nativeEvent.layout;
+    if (w !== layout.width || h !== layout.height) {
+      setLayout({ width: w, height: h });
+    }
+  };
+
+  const { width, height } = layout;
   const padTop = insets.top + 16;
   const padBottom = insets.bottom + 16;
   const availableHeight = height - padTop - padBottom;
 
   const treeBoxHeight = Math.round(availableHeight * TREE_HEIGHT_FRACTION);
-  const treeScale = treeBoxHeight / TREE_NATURAL_HEIGHT;
-  const treeBoxWidth = Math.round(TREE_NATURAL_WIDTH * treeScale + 16);
+  const treeBoxWidth = Math.round(availableHeight * TREE_WIDTH_FRACTION + 16);
+  const treeScaleY = treeBoxHeight / TREE_NATURAL_HEIGHT;
+  const treeScaleX = (treeBoxWidth - 16) / TREE_NATURAL_WIDTH;
   const logoSize = Math.round(availableHeight * LOGO_FRACTION);
 
   const goToIndex = (index) => {
@@ -108,7 +122,7 @@ export default function OnboardingScreen({ navigation, route }) {
     }
     return (
       <View style={[styles.treeBox, { width: treeBoxWidth, height: treeBoxHeight }]}>
-        <View style={{ transform: [{ scale: treeScale }] }}>
+        <View style={{ transform: [{ scaleX: treeScaleX }, { scaleY: treeScaleY }] }}>
           <TreeComponent score={item.score} showGround={false} />
         </View>
       </View>
@@ -172,21 +186,24 @@ export default function OnboardingScreen({ navigation, route }) {
         </View>
       </LinearGradient>
     );
-  }, [width, height, insets, treeBoxWidth, treeBoxHeight, treeScale, logoSize, padTop, padBottom]);
+  }, [width, height, insets, treeBoxWidth, treeBoxHeight, treeScaleX, treeScaleY, logoSize, padTop, padBottom]);
 
   return (
-    <FlatList
-      style={styles.flatList}
-      ref={flatListRef}
-      data={ONBOARDING_SLIDES}
-      renderItem={renderSlide}
-      keyExtractor={(_, i) => String(i)}
-      horizontal
-      pagingEnabled
-      scrollEnabled
-      showsHorizontalScrollIndicator={false}
-      getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
-    />
+    <View style={styles.flatList} onLayout={onContainerLayout}>
+      {width > 0 && height > 0 && (
+        <FlatList
+          ref={flatListRef}
+          data={ONBOARDING_SLIDES}
+          renderItem={renderSlide}
+          keyExtractor={(_, i) => String(i)}
+          horizontal
+          pagingEnabled
+          scrollEnabled
+          showsHorizontalScrollIndicator={false}
+          getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+        />
+      )}
+    </View>
   );
 }
 
@@ -228,7 +245,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrowSlot: {
-    width: 32,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -236,7 +253,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   arrowText: {
-    fontSize: 20,
+    fontSize: 40,
     color: colors.primaryGreen,
   },
   imageCenter: {
