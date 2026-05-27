@@ -42,14 +42,11 @@ const IMAGE_FLEX = 50;
 const CAPTION_FLEX = 10;
 const BUTTON_FLEX = 18;
 
-// Tree's natural rendered size (from TreeComponent at scale 1)
+// Tree visible height as fraction of available content height.
+// TreeComponent's natural height at size=1 is ~600px; we compute the size
+// multiplier to make the visible tree this fraction of available height.
 const TREE_NATURAL_HEIGHT = 600;
-const TREE_NATURAL_WIDTH = 340;
-// Tree visual dimensions as fractions of available content height.
-// Width and height are independent so the tree can stretch vertically
-// to fill the image section without growing wider.
-const TREE_WIDTH_FRACTION = 0.28;
-const TREE_HEIGHT_FRACTION = 0.40;
+const TREE_HEIGHT_FRACTION = 0.32;
 // Logo as fraction of available content height
 const LOGO_FRACTION = 0.095;
 
@@ -75,10 +72,7 @@ export default function OnboardingScreen({ navigation, route }) {
   const padBottom = insets.bottom + 16;
   const availableHeight = height - padTop - padBottom;
 
-  const treeBoxHeight = Math.round(availableHeight * TREE_HEIGHT_FRACTION);
-  const treeBoxWidth = Math.round(availableHeight * TREE_WIDTH_FRACTION + 16);
-  const treeScaleY = treeBoxHeight / TREE_NATURAL_HEIGHT;
-  const treeScaleX = (treeBoxWidth - 16) / TREE_NATURAL_WIDTH;
+  const treeSize = (availableHeight * TREE_HEIGHT_FRACTION) / TREE_NATURAL_HEIGHT;
   const logoSize = Math.round(availableHeight * LOGO_FRACTION);
 
   const goToIndex = (index) => {
@@ -120,13 +114,7 @@ export default function OnboardingScreen({ navigation, route }) {
         </View>
       );
     }
-    return (
-      <View style={[styles.treeBox, { width: treeBoxWidth, height: treeBoxHeight }]}>
-        <View style={{ transform: [{ scaleX: treeScaleX }, { scaleY: treeScaleY }] }}>
-          <TreeComponent score={item.score} showGround={false} />
-        </View>
-      </View>
-    );
+    return <TreeComponent score={item.score} showGround={false} size={treeSize} />;
   };
 
   const renderSlide = useCallback(({ item, index }) => {
@@ -186,7 +174,7 @@ export default function OnboardingScreen({ navigation, route }) {
         </View>
       </LinearGradient>
     );
-  }, [width, height, insets, treeBoxWidth, treeBoxHeight, treeScaleX, treeScaleY, logoSize, padTop, padBottom]);
+  }, [width, height, insets, treeSize, logoSize, padTop, padBottom]);
 
   return (
     <View style={styles.flatList} onLayout={onContainerLayout}>
@@ -260,11 +248,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  treeBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
   },
   lifelineContainer: {
     width: '100%',
