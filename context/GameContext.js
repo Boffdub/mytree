@@ -1,6 +1,12 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { StorageService } from '../services/storage';
 import { useAuthContext } from './AuthContext';
+import {
+  buildQuizSession,
+  createEmptyQuizSession,
+  applyUseLifeline,
+  calcShouldShrink,
+} from '../data/quiz';
 
 const GameContext = createContext();
 
@@ -17,6 +23,7 @@ export const GameProvider = ({ children }) => {
   const [score, setScore] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [quizSession, setQuizSession] = useState(createEmptyQuizSession());
 
   const storage = new StorageService(auth);
 
@@ -92,6 +99,43 @@ export const GameProvider = ({ children }) => {
     [storage]
   );
 
+  const startQuiz = useCallback(
+    async (category, difficulty) => {
+      const session = buildQuizSession(category, difficulty);
+      setQuizSession(session);
+      setCurrentSessionId(null);
+      try {
+        const id = await storage.startSession(category);
+        setCurrentSessionId(id);
+        return id;
+      } catch (err) {
+        console.error('[GameContext] Failed to start quiz session:', err);
+        return null;
+      }
+    },
+    [storage]
+  );
+
+  const useLifeline = useCallback(
+    (type, questionIndex) => {
+      setQuizSession((prev) => applyUseLifeline(prev, type, questionIndex));
+    },
+    []
+  );
+
+  const shouldShrink = useCallback(
+    (questionIndex, isCorrect) => {
+      let result = false;
+      setQuizSession((prev) => {
+        const { shouldShrink: shrink, newSession } = calcShouldShrink(prev, questionIndex, isCorrect);
+        result = shrink;
+        return newSession;
+      });
+      return result;
+    },
+    []
+  );
+
   const saveAnswer = useCallback(
     async (category, questionId, selectedAnswer, isCorrect) => {
       if (!currentSessionId) {
@@ -120,10 +164,14 @@ export const GameProvider = ({ children }) => {
   const value = {
     score,
     isLoading,
+    quizSession,
     incrementScore,
     decrementScore,
     resetScore,
     startSession,
+    startQuiz,
+    useLifeline,
+    shouldShrink,
     saveAnswer,
     completeSession,
     currentSessionId,
