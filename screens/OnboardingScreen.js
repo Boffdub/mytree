@@ -43,12 +43,13 @@ const CAPTION_FLEX = 10;
 const BUTTON_FLEX = 18;
 
 // Tree visible height as fraction of available content height.
-// TreeComponent's natural height at size=1 is ~600px; we compute the size
-// multiplier to make the visible tree this fraction of available height.
 const TREE_NATURAL_HEIGHT = 600;
 const TREE_HEIGHT_FRACTION = 0.32;
 // Logo as fraction of available content height
 const LOGO_FRACTION = 0.095;
+
+const ARROW_SLOT_WIDTH = 56;
+const HORIZONTAL_PADDING = 24;
 
 export default function OnboardingScreen({ navigation, route }) {
   const { markOnboardingSeen } = useAuthContext();
@@ -56,10 +57,9 @@ export default function OnboardingScreen({ navigation, route }) {
   const flatListRef = useRef(null);
   const returnTo = route?.params?.returnTo || 'Welcome';
 
-  // Measure the actual container size so we respect any parent maxWidth
-  // (App.js applies maxWidth: 420 on wide screens). useWindowDimensions
-  // would give the viewport size, which overflows the constrained container.
   const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const onContainerLayout = (e) => {
     const { width: w, height: h } = e.nativeEvent.layout;
     if (w !== layout.width || h !== layout.height) {
@@ -74,9 +74,22 @@ export default function OnboardingScreen({ navigation, route }) {
 
   const treeSize = (availableHeight * TREE_HEIGHT_FRACTION) / TREE_NATURAL_HEIGHT;
   const logoSize = Math.round(availableHeight * LOGO_FRACTION);
+  // Slide width excludes the two fixed arrow slots and horizontal padding
+  const slideWidth = width > 0 ? width - 2 * HORIZONTAL_PADDING - 2 * ARROW_SLOT_WIDTH : 0;
+  // Horizontal FlatList items don't inherit flex height — compute explicitly from proportions.
+  // Total flex = HEADER(22) + IMAGE(50) + CAPTION(10) + BUTTON(18) = 100
+  const slideHeight = availableHeight > 0 ? availableHeight * (IMAGE_FLEX + CAPTION_FLEX) / 100 : 0;
 
   const goToIndex = (index) => {
+    setCurrentIndex(index);
     flatListRef.current?.scrollToIndex({ index, animated: true });
+  };
+
+  const handleScrollEnd = (e) => {
+    if (slideWidth > 0) {
+      const idx = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
+      setCurrentIndex(idx);
+    }
   };
 
   const handleAuthExit = async () => {
@@ -117,94 +130,89 @@ export default function OnboardingScreen({ navigation, route }) {
     return <TreeComponent score={item.score} showGround={false} size={treeSize} />;
   };
 
-  const renderSlide = useCallback(({ item, index }) => {
-    const isFirst = index === 0;
-    const isLast = index === ONBOARDING_SLIDES.length - 1;
-
-    return (
-      <LinearGradient
-        colors={[colors.lightGreen, colors.white]}
-        style={[styles.slide, { width, height, paddingTop: padTop, paddingBottom: padBottom }]}
-      >
-        {/* Section 1: Header */}
-        <View style={styles.header}>
-          <Image
-            source={require('../assets/image/My_Tree_Logo.png')}
-            style={[styles.logo, { width: logoSize, height: logoSize }]}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>My Tree</Text>
-          <Text style={styles.tagline}>
-            Answer questions about the climate to grow your virtual tree!
-          </Text>
-        </View>
-
-        {/* Section 2: Image area with arrows */}
-        <View style={styles.imageSection}>
-          <View style={styles.arrowSlot}>
-            {!isFirst && (
-              <TouchableOpacity onPress={() => goToIndex(index - 1)} style={styles.arrowHit}>
-                <Text style={styles.arrowText}>◄</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.imageCenter}>{renderImageContent(item)}</View>
-          <View style={styles.arrowSlot}>
-            {!isLast && (
-              <TouchableOpacity onPress={() => goToIndex(index + 1)} style={styles.arrowHit}>
-                <Text style={styles.arrowText}>►</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Section 3: Caption */}
-        <View style={styles.captionSection}>
-          <Text style={styles.caption}>{item.caption}</Text>
-        </View>
-
-        {/* Section 4: Buttons */}
-        <View style={styles.buttonSection}>
-          <TouchableOpacity style={styles.registerButton} onPress={handleAuthExit}>
-            <Text style={styles.registerButtonText}>Register</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.loginButton} onPress={handleAuthExit}>
-            <Text style={styles.loginButtonText}>Log In</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    );
-  }, [width, height, insets, treeSize, logoSize, padTop, padBottom]);
+  const renderSlide = useCallback(({ item }) => (
+    <View style={{ width: slideWidth, height: slideHeight }}>
+      <View style={styles.imageCenter}>{renderImageContent(item)}</View>
+      <View style={styles.captionSection}>
+        <Text style={styles.caption}>{item.caption}</Text>
+      </View>
+    </View>
+  ), [slideWidth, slideHeight, treeSize]);
 
   return (
-    <View style={styles.flatList} onLayout={onContainerLayout}>
-      {width > 0 && height > 0 && (
-        <FlatList
-          ref={flatListRef}
-          data={ONBOARDING_SLIDES}
-          renderItem={renderSlide}
-          keyExtractor={(_, i) => String(i)}
-          horizontal
-          pagingEnabled
-          scrollEnabled
-          showsHorizontalScrollIndicator={false}
-          getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+    <LinearGradient
+      colors={[colors.lightGreen, colors.white]}
+      style={[styles.container, { paddingTop: padTop, paddingBottom: padBottom }]}
+      onLayout={onContainerLayout}
+    >
+      {/* Fixed Header */}
+      <View style={styles.header}>
+        <Image
+          source={require('../assets/image/My_Tree_Logo.png')}
+          style={[styles.logo, { width: logoSize, height: logoSize }]}
+          resizeMode="contain"
         />
-      )}
-    </View>
+        <Text style={styles.title}>My Tree</Text>
+        <Text style={styles.tagline}>
+          Answer questions about the climate to grow your virtual tree!
+        </Text>
+      </View>
+
+      {/* Middle section: fixed arrows flank the sliding FlatList */}
+      <View style={styles.middleSection}>
+        <View style={styles.arrowSlot}>
+          {currentIndex > 0 && (
+            <TouchableOpacity onPress={() => goToIndex(currentIndex - 1)} style={styles.arrowHit}>
+              <Text style={styles.arrowText}>◄</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {slideWidth > 0 && (
+          <FlatList
+            ref={flatListRef}
+            data={ONBOARDING_SLIDES}
+            renderItem={renderSlide}
+            keyExtractor={(_, i) => String(i)}
+            horizontal
+            pagingEnabled
+            scrollEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleScrollEnd}
+            getItemLayout={(_, index) => ({ length: slideWidth, offset: slideWidth * index, index })}
+            style={styles.flatList}
+          />
+        )}
+
+        <View style={styles.arrowSlot}>
+          {currentIndex < ONBOARDING_SLIDES.length - 1 && (
+            <TouchableOpacity onPress={() => goToIndex(currentIndex + 1)} style={styles.arrowHit}>
+              <Text style={styles.arrowText}>►</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Fixed Footer */}
+      <View style={styles.buttonSection}>
+        <TouchableOpacity style={styles.registerButton} onPress={handleAuthExit}>
+          <Text style={styles.registerButtonText}>Register</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.loginButton} onPress={handleAuthExit}>
+          <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  flatList: {
+  container: {
     flex: 1,
-  },
-  slide: {
-    flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: HORIZONTAL_PADDING,
   },
 
-  // Section 1: Header
+  // Section 1: Header (fixed)
   header: {
     flex: HEADER_FLEX,
     alignItems: 'center',
@@ -226,14 +234,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
   },
 
-  // Section 2: Image area
-  imageSection: {
-    flex: IMAGE_FLEX,
+  // Section 2+3: Middle — arrows are fixed, FlatList slides between them
+  middleSection: {
+    flex: IMAGE_FLEX + CAPTION_FLEX,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   arrowSlot: {
-    width: 56,
+    width: ARROW_SLOT_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -244,8 +252,16 @@ const styles = StyleSheet.create({
     fontSize: 40,
     color: colors.primaryGreen,
   },
-  imageCenter: {
+  flatList: {
     flex: 1,
+  },
+
+  // Each slide: image + caption only
+  slide: {
+    flex: 1,
+  },
+  imageCenter: {
+    flex: IMAGE_FLEX,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -299,7 +315,7 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
 
-  // Section 3: Caption
+  // Caption (inside each slide)
   captionSection: {
     flex: CAPTION_FLEX,
     alignItems: 'center',
@@ -313,7 +329,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // Section 4: Buttons
+  // Section 4: Buttons (fixed)
   buttonSection: {
     flex: BUTTON_FLEX,
     justifyContent: 'flex-end',
