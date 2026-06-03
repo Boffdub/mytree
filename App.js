@@ -22,13 +22,14 @@ import AnswerScreen from './screens/AnswerScreen';
 import TreeAnimationScreen from './screens/TreeAnimationScreen';
 import TreeScreen from './screens/TreeScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 import { colors } from './constants/colors';
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
 
 function AppNavigator() {
-  const { mode } = useAuthContext();
+  const { mode, hasSeenOnboarding } = useAuthContext();
 
   if (mode === 'loading') {
     return (
@@ -38,7 +39,14 @@ function AppNavigator() {
     );
   }
 
-  const initialRoute = mode === 'welcome' ? 'Welcome' : 'Home';
+  let initialRoute;
+  if (!hasSeenOnboarding) {
+    initialRoute = 'Onboarding';
+  } else if (mode === 'welcome') {
+    initialRoute = 'Welcome';
+  } else {
+    initialRoute = 'Home';
+  }
 
   return (
     <NavigationContainer>
@@ -47,6 +55,7 @@ function AppNavigator() {
         screenOptions={{ cardStyle: { flex: 1 }, headerShown: false }}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="MagicLinkSent" component={MagicLinkSentScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />

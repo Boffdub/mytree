@@ -9,9 +9,11 @@ export default function WelcomeScreen({ navigation }) {
   const { continueAsGuest, signInWithGoogle, mode } = useAuthContext();
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link)
+  // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link).
+  // Note: 'guest' mode does NOT auto-redirect — a guest who navigates here from
+  // Settings to upgrade their account should see the sign-in options.
   useEffect(() => {
-    if (mode === 'auth' || mode === 'guest') {
+    if (mode === 'auth') {
       navigation.replace('Home');
     }
   }, [mode]);

@@ -8,6 +8,15 @@ import { migrateGuestToAuth } from '../services/migration';
 const AuthContext = createContext();
 
 const GUEST_MODE_FLAG = '@mytree_guest_mode_active';
+export const ONBOARDING_KEY = '@mytree_has_seen_onboarding';
+
+export const hasSeenOnboardingStored = async () => {
+  const val = await AsyncStorage.getItem(ONBOARDING_KEY);
+  return val === 'true';
+};
+
+export const markOnboardingSeen = () => AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+
 const _webBase = typeof window !== 'undefined' && window.location?.origin
   ? window.location.origin + (process.env.EXPO_PUBLIC_WEB_BASE_PATH || '')
   : 'http://localhost:8081';
@@ -43,12 +52,16 @@ export const AuthProvider = ({ children }) => {
   const [mode, setMode] = useState('loading');
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
     let authSubscription;
     let linkingSubscription;
 
     const init = async () => {
+      const seen = await hasSeenOnboardingStored();
+      setHasSeenOnboarding(seen);
+
       if (isSupabaseConfigured()) {
         // Handle app opened from a cold start via deep link (magic link in email)
         const initialUrl = await Linking.getInitialURL();
@@ -142,6 +155,11 @@ export const AuthProvider = ({ children }) => {
     mode,
     user,
     session,
+    hasSeenOnboarding,
+    markOnboardingSeen: async () => {
+      await markOnboardingSeen();
+      setHasSeenOnboarding(true);
+    },
     continueAsGuest,
     signInWithEmail,
     signInWithGoogle,
