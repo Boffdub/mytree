@@ -35,6 +35,7 @@
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@babel/core": "^7.20.0",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.10",

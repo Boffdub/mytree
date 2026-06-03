@@ -63,3 +63,7 @@ supabase/.temp/
 .vscode/
 *.swp
 *.swo
+.gstack/
+
+# Question generation staging file
+scripts/staged_questions.json

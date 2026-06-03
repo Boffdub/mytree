@@ -14,7 +14,8 @@ const mapCategoryToKey = (displayName) => {
         "Energy": "energy",
         "Transportation": "transportation",
         "Food & Agriculture": "foodAgriculture",
-        "Carbon Removal": "carbonRemoval"
+        "Carbon Removal": "carbonRemoval",
+        "Solutions & Action": "solutions"
     };
     return categoryMap[displayName] || displayName;
 };
