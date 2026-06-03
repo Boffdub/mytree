@@ -30,7 +30,7 @@ export default function CategoryScreen({ navigation }) {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Energy' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Energy' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Energy.png')}
@@ -42,7 +42,7 @@ export default function CategoryScreen({ navigation }) {
                     
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Transportation' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Transportation' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Transportation.png')}
@@ -54,7 +54,7 @@ export default function CategoryScreen({ navigation }) {
                     
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Food & Agriculture' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Food & Agriculture' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Food_Agriculture.png')}
@@ -66,7 +66,7 @@ export default function CategoryScreen({ navigation }) {
                     
                     <TouchableOpacity
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Carbon Removal' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Carbon Removal' })}
                     >
                         <Image
                             source={require('../assets/vectors/Carbon_Removal.png')}
@@ -78,7 +78,7 @@ export default function CategoryScreen({ navigation }) {
 
                     <TouchableOpacity
                         style={[styles.categoryButton, styles.solutionsButton]}
-                        onPress={() => navigation.navigate('Question', { category: 'Solutions & Action' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Solutions & Action' })}
                     >
                         <Text style={styles.solutionsIcon}>🌱</Text>
                         <Text style={styles.categoryButtonText}>Solutions & Action</Text>

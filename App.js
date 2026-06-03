@@ -23,6 +23,7 @@ import TreeAnimationScreen from './screens/TreeAnimationScreen';
 import TreeScreen from './screens/TreeScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import DifficultyScreen from './screens/DifficultyScreen';
 import { colors } from './constants/colors';
 
 SplashScreen.preventAutoHideAsync();
@@ -60,6 +61,7 @@ function AppNavigator() {
         <Stack.Screen name="MagicLinkSent" component={MagicLinkSentScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Category" component={CategoryScreen} />
+        <Stack.Screen name="Difficulty" component={DifficultyScreen} />
         <Stack.Screen name="Question" component={QuestionScreen} />
         <Stack.Screen name="TreeAnimation" component={TreeAnimationScreen} />
         <Stack.Screen name="Answer" component={AnswerScreen} />
