@@ -95,7 +95,10 @@ export const AuthProvider = ({ children }) => {
           } else {
             setSession(null);
             setUser(null);
-            setMode('welcome');
+            // A null auth session also fires for guests (e.g. the INITIAL_SESSION
+            // event on launch). Don't clobber an active guest session — only fall
+            // back to 'welcome' when we weren't already in guest mode.
+            setMode((prev) => (prev === 'guest' ? 'guest' : 'welcome'));
           }
         });
         authSubscription = listener.data.subscription;
