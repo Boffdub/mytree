@@ -46,7 +46,9 @@ export default function TreeAnimationScreen({ navigation, route }) {
         decrementScore();
       }
 
-      navigation.navigate('Answer', {
+      // Replace (not navigate) so this transient animation screen leaves the stack —
+      // otherwise going back from Answer lands here with no way to advance.
+      navigation.replace('Answer', {
         question,
         selectedAnswer,
         category,

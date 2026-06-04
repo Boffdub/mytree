@@ -87,6 +87,8 @@ export function applyUseLifeline(session, type, questionIndex) {
 export function calcShouldShrink(session, questionIndex, isCorrect) {
   const shielded = session.shieldArmedForIndex === questionIndex;
   const shouldShrink = !isCorrect && !shielded;
+  // Shield is auto-consumed: once armed for this question it is spent on submit,
+  // whether or not the answer turned out correct (by design — it does not roll over).
   const newSession = shielded
     ? { ...session, shieldArmedForIndex: null }
     : session;

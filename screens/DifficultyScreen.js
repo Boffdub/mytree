@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameContext } from '../context/GameContext';
@@ -16,11 +16,29 @@ export default function DifficultyScreen({ navigation, route }) {
   const { category } = route.params || {};
   const { startQuiz } = useGameContext();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Reset transient state whenever this screen regains focus (e.g. back from Question),
+  // so the buttons aren't left disabled by a stale loading flag.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setLoading(false);
+      setError(null);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handlePick = async (difficulty) => {
     if (loading) return;
     setLoading(true);
-    await startQuiz(category, difficulty);
+    setError(null);
+    const sessionId = await startQuiz(category, difficulty);
+    if (!sessionId) {
+      // startQuiz failed to open a session; submitting would be impossible, so don't advance.
+      setError('Could not start the quiz. Please check your connection and try again.');
+      setLoading(false);
+      return;
+    }
     navigation.navigate('Question', { category, questionIndex: 0 });
   };
 
@@ -52,6 +70,8 @@ export default function DifficultyScreen({ navigation, route }) {
         ))}
 
         {loading && <ActivityIndicator color={colors.primaryGreen} style={styles.spinner} />}
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
     </View>
   );
@@ -136,5 +156,12 @@ const styles = StyleSheet.create({
   },
   spinner: {
     marginTop: 20,
+  },
+  errorText: {
+    color: colors.errorRed,
+    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 14,
+    fontFamily: fonts.regular,
   },
 });
