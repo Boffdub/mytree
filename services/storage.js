@@ -15,6 +15,13 @@ export class StorageService {
     this.authState = authState;
   }
 
+  // Use the authenticated (Supabase) path only when there is a signed-in user.
+  // Any other state — guest, welcome, loading, or a half-initialized session —
+  // falls back to local guest storage instead of dereferencing a null user.
+  _isAuthenticated() {
+    return this.authState.mode === 'auth' && !!this.authState.user;
+  }
+
   // ---- Guest storage helpers ----
 
   async _readGuestData() {
@@ -37,7 +44,7 @@ export class StorageService {
   // ---- Public API ----
 
   async getScore() {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       return data.score;
     }
@@ -52,7 +59,7 @@ export class StorageService {
   }
 
   async updateScore(newScore) {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       data.score = newScore;
       await this._writeGuestData(data);
@@ -62,7 +69,7 @@ export class StorageService {
   }
 
   async startSession(category) {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       const sessionId = Crypto.randomUUID();
       data.sessions.push({
@@ -90,7 +97,7 @@ export class StorageService {
   }
 
   async completeSession(sessionId) {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       const session = data.sessions.find((s) => s.id === sessionId);
       if (session) {
@@ -115,7 +122,7 @@ export class StorageService {
   }
 
   async saveAnswer(sessionId, category, questionId, selectedAnswer, isCorrect) {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       const session = data.sessions.find((s) => s.id === sessionId);
       if (!session) throw new Error(`Session ${sessionId} not found`);
@@ -141,7 +148,7 @@ export class StorageService {
   }
 
   async getAnsweredQuestions(category = null) {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       const data = await this._readGuestData();
       const all = data.sessions.flatMap((s) =>
         s.answers.map((a) => ({ ...a, category: s.category }))
@@ -166,7 +173,7 @@ export class StorageService {
   }
 
   async clearAllData() {
-    if (this.authState.mode === 'guest') {
+    if (!this._isAuthenticated()) {
       await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
       return;
     }

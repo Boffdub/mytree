@@ -91,6 +91,10 @@ export default function SettingsScreen({ navigation }) {
     navigation.navigate('Welcome');
   };
 
+  const handleHowToPlay = () => {
+    navigation.navigate('Onboarding', { returnTo: 'Settings' });
+  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
@@ -120,6 +124,10 @@ export default function SettingsScreen({ navigation }) {
               <Text style={styles.buttonText}>Sign Out</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
+              <Text style={styles.buttonText}>How to Play</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
               <Text style={styles.dangerButtonText}>Delete Account</Text>
             </TouchableOpacity>
@@ -136,6 +144,10 @@ export default function SettingsScreen({ navigation }) {
 
             <TouchableOpacity style={styles.primaryButton} onPress={handleSignIn}>
               <Text style={styles.primaryButtonText}>Sign in to save progress</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={handleHowToPlay}>
+              <Text style={styles.buttonText}>How to Play</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.dangerButton} onPress={handleResetGuest}>

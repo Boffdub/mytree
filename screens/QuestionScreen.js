@@ -1,240 +1,274 @@
-import React from 'react';
-import { useGameContext } from '../context/GameContext';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import { getQuestionsByCategory } from '../data/questions';
+import { useGameContext } from '../context/GameContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
-// Mapping function outside, before the component
-const mapCategoryToKey = (displayName) => {
-    // your mapping logic here
-    const categoryMap = {
-        "Energy": "energy",
-        "Transportation": "transportation",
-        "Food & Agriculture": "foodAgriculture",
-        "Carbon Removal": "carbonRemoval"
-    };
-    return categoryMap[displayName] || displayName;
-};
-
 export default function QuestionScreen({ navigation, route }) {
-    const insets = useSafeAreaInsets();
-    const { category } = route.params || { category: 'General' };
+  const insets = useSafeAreaInsets();
+  const { category } = route.params || {};
+  const questionIndex = route.params?.questionIndex ?? 0;
 
-    // State for the current question (the question object you're showing)
-    const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
 
-    // State for all questions in this category
-    const [questions, setQuestions] = useState([]);
+  const { score, quizSession, useLifeline, currentSessionId } = useGameContext();
 
-    // State for which answer the user selected (0, 1, 2, or 3, or null if nothing selected)
-    const [selectedAnswer, setSelectedAnswer] = useState(null);
+  // Reset selected answer whenever the question changes
+  useEffect(() => {
+    setSelectedAnswer(null);
+  }, [questionIndex]);
 
-    // State for which question number you're on (0 = first question)
-    const [questionIndex, setQuestionIndex] = useState(0);
+  const currentQuestion = quizSession.questions[questionIndex] ?? null;
+  const eliminated = quizSession.eliminatedByIndex[questionIndex] ?? [];
 
-    const { score, startSession, currentSessionId } = useGameContext();
+  const lifelinesAvailable = quizSession.lifelinesAvailable;
+  const lifelinesUsed = quizSession.lifelinesUsed;
 
-    useEffect(() => {
-        const categoryKey = mapCategoryToKey(category);
-        const categoryQuestions = getQuestionsByCategory(categoryKey);
-        setQuestions(categoryQuestions);
+  const canUse5050 = lifelinesAvailable.includes('5050') && !lifelinesUsed['5050'];
+  const canUseShield = lifelinesAvailable.includes('shield') && !lifelinesUsed.shield;
+  const used5050 = lifelinesUsed['5050'];
+  const usedShield = lifelinesUsed.shield;
+  const shieldArmed = quizSession.shieldArmedForIndex === questionIndex;
 
-        const indexFromRoute = route.params?.questionIndex ?? 0;
-        setQuestionIndex(indexFromRoute);
-
-        if (categoryQuestions.length > 0 && indexFromRoute < categoryQuestions.length) {
-            setCurrentQuestion(categoryQuestions[indexFromRoute]);
-            setSelectedAnswer(null);
-        }
-
-        // Start a new session when entering the first question (index 0)
-        if (indexFromRoute === 0 && !currentSessionId) {
-            startSession(categoryKey);
-        }
-    }, [category, route.params?.questionIndex]);
-
-    return (
-        <View style={styles.screenContainer}>
-            <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.homeButton}>
-                        <Text style={styles.homeButtonText}>🏠</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{category}</Text>
-                    <View style={styles.placeholder} />
-                </View>
-            </View>
-
-            <View style={styles.bodyContainer}>
-                {currentQuestion ? (
-                    <>
-                        {/* Question Text */}
-                        <Text style={styles.questionText}>{currentQuestion.question}</Text>
-                        
-                        {/* Answer Options */}
-                        {currentQuestion.options.map((option, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[
-                                    styles.optionButton,
-                                    selectedAnswer === index && styles.selectedOptionButton
-                                ]}
-                                onPress={() => setSelectedAnswer(index)}
-                            >
-                                <Text style={[
-                                    styles.optionButtonText,
-                                    selectedAnswer === index && styles.selectedOptionButtonText
-                                ]}>
-                                    {option}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-
-                        {/* Submit Button - only shows when an answer is selected and session is ready */}
-                        {selectedAnswer !== null && (
-                            <TouchableOpacity
-                                style={[styles.submitButton, !currentSessionId && styles.submitButtonDisabled]}
-                                disabled={!currentSessionId}
-                                onPress={() => {
-                                    navigation.navigate('TreeAnimation', {
-                                        fromScore: score,
-                                        isCorrect: selectedAnswer === currentQuestion.correct,
-                                        question: currentQuestion,
-                                        selectedAnswer: selectedAnswer,
-                                        category: category,
-                                        questions: questions,
-                                        questionIndex: questionIndex
-                                    });
-                                }}
-                            >
-                                <Text style={styles.submitButtonText}>Submit Answer</Text>
-                            </TouchableOpacity>
-                        )}
-                    </>
-                ) : (
-                    <Text style={styles.loadingText}>Loading question...</Text>
-                )}
-            </View>
+  return (
+    <View style={styles.screenContainer}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.homeButton}>
+            <Text style={styles.homeButtonText}>🏠</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{category}</Text>
+          <View style={styles.placeholder} />
         </View>
-    );
+      </View>
+
+      <View style={styles.bodyContainer}>
+        {currentQuestion ? (
+          <>
+            {/* Progress */}
+            <Text style={styles.progressText}>
+              Question {questionIndex + 1} of {quizSession.questions.length}
+            </Text>
+
+            {/* Lifeline buttons (only rendered when gated) */}
+            {(lifelinesAvailable.includes('5050') || lifelinesAvailable.includes('shield')) && (
+              <View style={styles.lifelineRow}>
+                {lifelinesAvailable.includes('5050') && (
+                  <TouchableOpacity
+                    style={[styles.lifelineButton, used5050 && styles.lifelineButtonSpent]}
+                    disabled={!canUse5050}
+                    onPress={() => useLifeline('5050', questionIndex)}
+                  >
+                    <Text style={[styles.lifelineText, used5050 && styles.lifelineTextSpent]}>
+                      50/50{used5050 ? ' ✓' : ''}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {lifelinesAvailable.includes('shield') && (
+                  <TouchableOpacity
+                    style={[
+                      styles.lifelineButton,
+                      usedShield && styles.lifelineButtonSpent,
+                      shieldArmed && styles.lifelineButtonArmed,
+                    ]}
+                    disabled={!canUseShield}
+                    onPress={() => useLifeline('shield', questionIndex)}
+                  >
+                    <Text style={[styles.lifelineText, usedShield && styles.lifelineTextSpent]}>
+                      Shield{usedShield ? (shieldArmed ? ' 🛡' : ' ✓') : ''}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Question Text */}
+            <Text style={styles.questionText}>{currentQuestion.question}</Text>
+
+            {/* Answer Options */}
+            {currentQuestion.options.map((option, index) => {
+              const isEliminated = eliminated.includes(index);
+              if (isEliminated) return null;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.optionButton,
+                    selectedAnswer === index && styles.selectedOptionButton,
+                  ]}
+                  onPress={() => setSelectedAnswer(index)}
+                >
+                  <Text
+                    style={[
+                      styles.optionButtonText,
+                      selectedAnswer === index && styles.selectedOptionButtonText,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Submit Button */}
+            {selectedAnswer !== null && (
+              <TouchableOpacity
+                style={[styles.submitButton, !currentSessionId && styles.submitButtonDisabled]}
+                disabled={!currentSessionId}
+                onPress={() => {
+                  navigation.navigate('TreeAnimation', {
+                    fromScore: score,
+                    isCorrect: selectedAnswer === currentQuestion.correct,
+                    question: currentQuestion,
+                    selectedAnswer,
+                    category,
+                    questionIndex,
+                  });
+                }}
+              >
+                <Text style={styles.submitButtonText}>Submit Answer</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.loadingText}>Loading question...</Text>
+        )}
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    // Main container - holds header and body
-    screenContainer: {
-        flex: 1,
-    },
-    
-    // Green gradient header area
-    headerContainer: {
-        backgroundColor: colors.lightGreen,
-        paddingHorizontal: 20,
-        paddingBottom: 15,
-    },
-    
-    // Header row with back button, title, placeholder
-    header: {
-        flexDirection: 'row',     // Lay out children horizontally
-        alignItems: 'center',     // Center vertically
-        justifyContent: 'space-between',  // Spread items apart
-        width: '100%',
-    },
-    
-    // Category title in header
-    headerTitle: {
-        fontSize: 20,
-        flex: 1,
-        textAlign: 'center',
-        fontWeight: 'bold',
-        color: '#1E8F2D',
-        fontFamily: fonts.bold,
-    },
-    
-    // Empty view to balance the back button (centers the title)
-    placeholder: {
-        width: 40,
-    },
-    homeButton: {
-        width: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    homeButtonText: {
-        fontSize: 22,
-    },
-    
-    // White/light body area
-    bodyContainer: {
-        backgroundColor: colors.white,
-        flex: 1,                  // Takes remaining space
-        paddingHorizontal: 20,
-        paddingTop: 30,
-    },
-    
-    // Question text
-    questionText: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#1E8F2D',
-        marginBottom: 25,
-        lineHeight: 30,
-        fontFamily: fonts.bold,
-    },
-    
-    // Answer option buttons
-    optionButton: {
-        backgroundColor: colors.white,
-        borderWidth: 2,
-        borderColor: colors.primaryGreen,
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 15,
-        marginBottom: 12,
-        width: '100%',
-        alignItems: 'center',
-    },
-    selectedOptionButton: {
-        backgroundColor: '#CEE7CF',
-        borderColor: '#1E8F2D',
-    },
-    optionButtonText: {
-        color: '#1E8F2D',
-        fontSize: 16,
-        fontWeight: '500',
-        fontFamily: fonts.semiBold,
-    },
-    selectedOptionButtonText: {
-        color: colors.primaryGreen,
-        fontFamily: fonts.semiBold,
-    },
-    
-    submitButton: {
-        backgroundColor: colors.primaryGreen,
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 25,
-        marginTop: 20,
-        alignItems: 'center',
-        width: '100%',
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        fontFamily: fonts.bold,
-    },
-    submitButtonDisabled: {
-        opacity: 0.5,
-    },
-    
-    // Loading state
-    loadingText: {
-        fontSize: 16,
-        color: colors.gray,
-        textAlign: 'center',
-        fontFamily: fonts.regular,
-    },
+  screenContainer: {
+    flex: 1,
+  },
+  headerContainer: {
+    backgroundColor: colors.lightGreen,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  headerTitle: {
+    fontSize: 20,
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#1E8F2D',
+    fontFamily: fonts.bold,
+  },
+  placeholder: {
+    width: 40,
+  },
+  homeButton: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeButtonText: {
+    fontSize: 22,
+  },
+  bodyContainer: {
+    backgroundColor: colors.white,
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 10,
+    fontFamily: fonts.regular,
+  },
+  lifelineRow: {
+    flexDirection: 'row',
+    marginBottom: 14,
+    gap: 10,
+  },
+  lifelineButton: {
+    borderWidth: 2,
+    borderColor: colors.primaryGreen,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+  },
+  lifelineButtonSpent: {
+    borderColor: colors.gray,
+    opacity: 0.5,
+  },
+  lifelineButtonArmed: {
+    backgroundColor: '#CEE7CF',
+  },
+  lifelineText: {
+    color: colors.primaryGreen,
+    fontWeight: 'bold',
+    fontSize: 13,
+    fontFamily: fonts.bold,
+  },
+  lifelineTextSpent: {
+    color: colors.gray,
+  },
+  questionText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1E8F2D',
+    marginBottom: 25,
+    lineHeight: 30,
+    fontFamily: fonts.bold,
+  },
+  optionButton: {
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.primaryGreen,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    marginBottom: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  selectedOptionButton: {
+    backgroundColor: '#CEE7CF',
+    borderColor: '#1E8F2D',
+  },
+  optionButtonText: {
+    color: '#1E8F2D',
+    fontSize: 16,
+    fontWeight: '500',
+    fontFamily: fonts.semiBold,
+  },
+  selectedOptionButtonText: {
+    color: colors.primaryGreen,
+    fontFamily: fonts.semiBold,
+  },
+  submitButton: {
+    backgroundColor: colors.primaryGreen,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    marginTop: 20,
+    alignItems: 'center',
+    width: '100%',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: fonts.bold,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.gray,
+    textAlign: 'center',
+    fontFamily: fonts.regular,
+  },
 });

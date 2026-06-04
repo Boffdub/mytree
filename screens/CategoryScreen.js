@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+// TODO: replace emoji icon with assets/vectors/Solutions.png once designed
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
@@ -29,7 +30,7 @@ export default function CategoryScreen({ navigation }) {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Energy' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Energy' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Energy.png')}
@@ -41,7 +42,7 @@ export default function CategoryScreen({ navigation }) {
                     
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Transportation' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Transportation' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Transportation.png')}
@@ -53,7 +54,7 @@ export default function CategoryScreen({ navigation }) {
                     
                     <TouchableOpacity 
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Food & Agriculture' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Food & Agriculture' })}
                     >
                         <Image 
                             source={require('../assets/vectors/Food_Agriculture.png')}
@@ -63,16 +64,24 @@ export default function CategoryScreen({ navigation }) {
                         <Text style={styles.categoryButtonText}>Food & Agriculture</Text>
                     </TouchableOpacity>
                     
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.categoryButton}
-                        onPress={() => navigation.navigate('Question', { category: 'Carbon Removal' })}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Carbon Removal' })}
                     >
-                        <Image 
+                        <Image
                             source={require('../assets/vectors/Carbon_Removal.png')}
                             style={styles.categoryIcon}
                             resizeMode="contain"
                         />
                         <Text style={styles.categoryButtonText}>Carbon Removal</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.categoryButton, styles.solutionsButton]}
+                        onPress={() => navigation.navigate('Difficulty', { category: 'Solutions & Action' })}
+                    >
+                        <Text style={styles.solutionsIcon}>🌱</Text>
+                        <Text style={styles.categoryButtonText}>Solutions & Action</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -170,6 +179,16 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         marginRight: 10,
+    },
+
+    solutionsButton: {
+        backgroundColor: '#2E7D32',
+    },
+
+    solutionsIcon: {
+        fontSize: 32,
+        marginRight: 10,
+        lineHeight: 40,
     },
     
     categoryButtonText: {
