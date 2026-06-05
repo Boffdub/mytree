@@ -6,6 +6,7 @@ import TreeComponent from '../components/TreeComponent';
 import { useGameContext } from '../context/GameContext';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
+import ScoreBadge from '../components/ScoreBadge';
 
 export default function TreeAnimationScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -21,7 +22,7 @@ export default function TreeAnimationScreen({ navigation, route }) {
     const toScore = Math.max(0, Math.min(fromScore + (isCorrect ? 1 : willShrink ? -1 : 0), 5));
     mountRef.current = { shielded, willShrink, toScore };
   }
-  const { willShrink, toScore } = mountRef.current;
+  const { shielded, willShrink, toScore } = mountRef.current;
 
   const animValue = useRef(new Animated.Value(fromScore)).current;
   const [displayScore, setDisplayScore] = useState(fromScore);
@@ -54,6 +55,7 @@ export default function TreeAnimationScreen({ navigation, route }) {
         category,
         questionIndex,
         scoreAlreadyUpdated: true,
+        shieldConsumed: shielded,
       });
     };
 
@@ -136,18 +138,8 @@ export default function TreeAnimationScreen({ navigation, route }) {
       lineHeight: 20,
     },
     scoreBadge: {
-      backgroundColor: colors.white,
-      borderWidth: 2,
-      borderColor: colors.primaryGreen,
-      borderRadius: 20,
       paddingVertical: 8,
       paddingHorizontal: 16,
-    },
-    scoreBadgeText: {
-      color: colors.primaryGreen,
-      fontSize: 14,
-      fontWeight: 'bold',
-      fontFamily: fonts.bold,
     },
   });
 
@@ -167,9 +159,7 @@ export default function TreeAnimationScreen({ navigation, route }) {
         <Text style={styles.instructionText}>
           Every question you get right, your tree grows an inch. Every question you get wrong, it shrinks.
         </Text>
-        <View style={styles.scoreBadge}>
-          <Text style={styles.scoreBadgeText}>Score: {Math.round(displayScore)}</Text>
-        </View>
+        <ScoreBadge score={Math.round(displayScore)} style={styles.scoreBadge} />
       </View>
     </LinearGradient>
   );

@@ -3,17 +3,20 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameContext } from '../context/GameContext';
 import { mapCategoryToKey } from '../data/categoryMap';
+import { shieldBannerState } from '../data/quiz';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
+import ScoreBadge from '../components/ScoreBadge';
 
 export default function AnswerScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const { question, selectedAnswer, category, questionIndex, scoreAlreadyUpdated } = route.params || {};
+  const { question, selectedAnswer, category, questionIndex, scoreAlreadyUpdated, shieldConsumed } = route.params || {};
   const { score, incrementScore, decrementScore, saveAnswer, completeSession, quizSession } = useGameContext();
 
   const scoredQuestionsRef = useRef(new Set());
 
   const isCorrect = question && selectedAnswer !== null && selectedAnswer === question.correct;
+  const shieldBanner = shieldBannerState(shieldConsumed, isCorrect);
 
   // Progress comes from the live quiz session in context (not nav params)
   const totalQuestions = quizSession.questions.length || 1;
@@ -67,9 +70,7 @@ export default function AnswerScreen({ navigation, route }) {
         <View style={styles.progressContainer}>
           <View style={styles.progressTopRow}>
             <Text style={styles.progressText}>Question {currentQuestionNumber} of {totalQuestions}</Text>
-            <View style={styles.scoreBadge}>
-              <Text style={styles.scoreText}>Score: {score}</Text>
-            </View>
+            <ScoreBadge score={score} />
           </View>
           <View style={styles.progressBarContainer}>
             <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
@@ -89,6 +90,12 @@ export default function AnswerScreen({ navigation, route }) {
                 <View style={[styles.resultBanner, isCorrect ? styles.correctBanner : styles.incorrectBanner]}>
                   <Text style={styles.resultText}>{isCorrect ? '✓ Correct!' : '✗ Incorrect'}</Text>
                 </View>
+
+                {shieldBanner.show && (
+                  <View style={styles.shieldBanner}>
+                    <Text style={styles.shieldBannerText}>{shieldBanner.message}</Text>
+                  </View>
+                )}
 
                 <Text style={styles.questionText}>{question.question}</Text>
 
@@ -234,19 +241,17 @@ const styles = StyleSheet.create({
     color: colors.black,
     fontFamily: fonts.regular,
   },
-  scoreBadge: {
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#1E8F2D',
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+  shieldBanner: {
+    backgroundColor: colors.lightGreen,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  scoreText: {
-    color: colors.primaryGreen,
+  shieldBannerText: {
     fontSize: 14,
+    color: colors.primaryGreen,
     fontWeight: 'bold',
     fontFamily: fonts.bold,
   },
