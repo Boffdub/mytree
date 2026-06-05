@@ -84,6 +84,19 @@ export function applyUseLifeline(session, type, questionIndex) {
   return update;
 }
 
+export function shouldClearSelection(selectedAnswer, eliminated) {
+  if (selectedAnswer === null || !eliminated || eliminated.length === 0) return false;
+  return eliminated.includes(selectedAnswer);
+}
+
+export function shieldBannerState(shieldConsumed, isCorrect) {
+  if (!shieldConsumed) return { show: false, message: '' };
+  return {
+    show: true,
+    message: isCorrect ? '🛡 Shield used' : '🛡 Shield used — your tree was protected!',
+  };
+}
+
 export function calcShouldShrink(session, questionIndex, isCorrect) {
   const shielded = session.shieldArmedForIndex === questionIndex;
   const shouldShrink = !isCorrect && !shielded;

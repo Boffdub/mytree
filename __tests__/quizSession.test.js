@@ -8,6 +8,8 @@ import {
   createEmptyQuizSession,
   applyUseLifeline,
   calcShouldShrink,
+  shouldClearSelection,
+  shieldBannerState,
   LIFELINE_GATING,
 } from '../data/quiz';
 
@@ -202,6 +204,47 @@ describe('REGRESSION: base scoring path', () => {
     // AnswerScreen hasNextQuestion logic: questionIndex + 1 < questions.length
     expect(4 + 1 < session.questions.length).toBe(false); // index 4 is last → completeSession
     expect(3 + 1 < session.questions.length).toBe(true);  // index 3 is not last
+  });
+});
+
+// ─── shouldClearSelection ─────────────────────────────────────────────────────
+
+describe('shouldClearSelection', () => {
+  test('returns true when selected answer is in the eliminated list', () => {
+    expect(shouldClearSelection(2, [1, 2])).toBe(true);
+  });
+
+  test('returns false when selectedAnswer is null', () => {
+    expect(shouldClearSelection(null, [1, 2])).toBe(false);
+  });
+
+  test('returns false when eliminated is empty', () => {
+    expect(shouldClearSelection(0, [])).toBe(false);
+  });
+
+  test('returns false when selected answer is not in the eliminated list', () => {
+    expect(shouldClearSelection(0, [1, 2])).toBe(false);
+  });
+});
+
+// ─── shieldBannerState ────────────────────────────────────────────────────────
+
+describe('shieldBannerState', () => {
+  test('returns show: false when shieldConsumed is false', () => {
+    expect(shieldBannerState(false, true)).toEqual({ show: false, message: '' });
+    expect(shieldBannerState(false, false)).toEqual({ show: false, message: '' });
+  });
+
+  test('returns protected message on wrong answer with shield consumed', () => {
+    const result = shieldBannerState(true, false);
+    expect(result.show).toBe(true);
+    expect(result.message).toContain('protected');
+  });
+
+  test("returns 'Shield used' (no protected) on correct answer with shield consumed", () => {
+    const result = shieldBannerState(true, true);
+    expect(result.show).toBe(true);
+    expect(result.message).toBe('🛡 Shield used');
   });
 });
 

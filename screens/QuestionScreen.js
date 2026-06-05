@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameContext } from '../context/GameContext';
+import { shouldClearSelection } from '../data/quiz';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
+import ScoreBadge from '../components/ScoreBadge';
 
 export default function QuestionScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -31,6 +33,16 @@ export default function QuestionScreen({ navigation, route }) {
   const usedShield = lifelinesUsed.shield;
   const shieldArmed = quizSession.shieldArmedForIndex === questionIndex;
 
+  // Clear selection if 50/50 eliminates the currently selected option
+  useEffect(() => {
+    if (shouldClearSelection(selectedAnswer, eliminated)) {
+      setSelectedAnswer(null);
+    }
+  }, [eliminated]);
+
+  const show5050Banner = !!quizSession.eliminatedByIndex[questionIndex];
+  const showShieldBanner = shieldArmed;
+
   return (
     <View style={styles.screenContainer}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
@@ -39,7 +51,7 @@ export default function QuestionScreen({ navigation, route }) {
             <Text style={styles.homeButtonText}>🏠</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{category}</Text>
-          <View style={styles.placeholder} />
+          <ScoreBadge score={score} />
         </View>
       </View>
 
@@ -51,34 +63,60 @@ export default function QuestionScreen({ navigation, route }) {
               Question {questionIndex + 1} of {quizSession.questions.length}
             </Text>
 
-            {/* Lifeline buttons (only rendered when gated) */}
+            {/* Lifeline tiles (only rendered when gated) */}
             {(lifelinesAvailable.includes('5050') || lifelinesAvailable.includes('shield')) && (
               <View style={styles.lifelineRow}>
                 {lifelinesAvailable.includes('5050') && (
                   <TouchableOpacity
-                    style={[styles.lifelineButton, used5050 && styles.lifelineButtonSpent]}
+                    style={styles.tilePressable}
                     disabled={!canUse5050}
                     onPress={() => useLifeline('5050', questionIndex)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.lifelineText, used5050 && styles.lifelineTextSpent]}>
-                      50/50{used5050 ? ' ✓' : ''}
+                    <View style={[
+                      styles.tileBox,
+                      used5050 ? styles.tileBoxSpent : styles.tileBoxAvailable,
+                    ]}>
+                      <Text style={[styles.tileIcon, used5050 && styles.tileIconSpent]}>
+                        50/50
+                      </Text>
+                    </View>
+                    <Text style={[styles.tileLabel, used5050 && styles.tileLabelSpent]}>
+                      50/50
                     </Text>
                   </TouchableOpacity>
                 )}
                 {lifelinesAvailable.includes('shield') && (
                   <TouchableOpacity
-                    style={[
-                      styles.lifelineButton,
-                      usedShield && styles.lifelineButtonSpent,
-                      shieldArmed && styles.lifelineButtonArmed,
-                    ]}
+                    style={styles.tilePressable}
                     disabled={!canUseShield}
                     onPress={() => useLifeline('shield', questionIndex)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.lifelineText, usedShield && styles.lifelineTextSpent]}>
-                      Shield{usedShield ? (shieldArmed ? ' 🛡' : ' ✓') : ''}
+                    <View style={[
+                      styles.tileBox,
+                      usedShield ? styles.tileBoxSpent : shieldArmed ? styles.tileBoxArmed : styles.tileBoxAvailable,
+                    ]}>
+                      <Text style={[styles.tileIcon, usedShield && styles.tileIconSpent]}>
+                        🛡
+                      </Text>
+                    </View>
+                    <Text style={[styles.tileLabel, usedShield && styles.tileLabelSpent]}>
+                      Shield
                     </Text>
                   </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Contextual banners */}
+            {(show5050Banner || showShieldBanner) && (
+              <View style={styles.bannerContainer}>
+                {show5050Banner && (
+                  <Text style={styles.bannerText}>✓ 50/50 used — 2 answers removed</Text>
+                )}
+                {showShieldBanner && (
+                  <Text style={styles.bannerText}>🛡 Shield Active — Your tree is protected!</Text>
                 )}
               </View>
             )}
@@ -89,20 +127,22 @@ export default function QuestionScreen({ navigation, route }) {
             {/* Answer Options */}
             {currentQuestion.options.map((option, index) => {
               const isEliminated = eliminated.includes(index);
-              if (isEliminated) return null;
               return (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.optionButton,
                     selectedAnswer === index && styles.selectedOptionButton,
+                    isEliminated && styles.eliminatedOptionButton,
                   ]}
+                  disabled={isEliminated}
                   onPress={() => setSelectedAnswer(index)}
                 >
                   <Text
                     style={[
                       styles.optionButtonText,
                       selectedAnswer === index && styles.selectedOptionButtonText,
+                      isEliminated && styles.eliminatedOptionButtonText,
                     ]}
                   >
                     {option}
@@ -162,9 +202,6 @@ const styles = StyleSheet.create({
     color: '#1E8F2D',
     fontFamily: fonts.bold,
   },
-  placeholder: {
-    width: 40,
-  },
   homeButton: {
     width: 40,
     alignItems: 'center',
@@ -187,32 +224,64 @@ const styles = StyleSheet.create({
   },
   lifelineRow: {
     flexDirection: 'row',
-    marginBottom: 14,
-    gap: 10,
+    marginBottom: 10,
+    gap: 12,
   },
-  lifelineButton: {
+  tilePressable: {
+    alignItems: 'center',
+  },
+  tileBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
     borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileBoxAvailable: {
     borderColor: colors.primaryGreen,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     backgroundColor: colors.white,
   },
-  lifelineButtonSpent: {
+  tileBoxSpent: {
     borderColor: colors.gray,
+    backgroundColor: colors.white,
     opacity: 0.5,
   },
-  lifelineButtonArmed: {
-    backgroundColor: '#CEE7CF',
+  tileBoxArmed: {
+    borderColor: colors.primaryGreen,
+    backgroundColor: colors.lightGreen,
   },
-  lifelineText: {
-    color: colors.primaryGreen,
+  tileIcon: {
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 13,
+    color: colors.primaryGreen,
     fontFamily: fonts.bold,
   },
-  lifelineTextSpent: {
+  tileIconSpent: {
     color: colors.gray,
+  },
+  tileLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    color: colors.primaryGreen,
+    fontWeight: 'bold',
+    fontFamily: fonts.bold,
+  },
+  tileLabelSpent: {
+    color: colors.gray,
+  },
+  bannerContainer: {
+    backgroundColor: colors.lightGreen,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    gap: 4,
+  },
+  bannerText: {
+    fontSize: 13,
+    color: colors.primaryGreen,
+    fontFamily: fonts.regular,
   },
   questionText: {
     fontSize: 22,
@@ -237,6 +306,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#CEE7CF',
     borderColor: '#1E8F2D',
   },
+  eliminatedOptionButton: {
+    borderColor: colors.gray,
+    backgroundColor: colors.grayLight,
+    opacity: 0.5,
+  },
   optionButtonText: {
     color: '#1E8F2D',
     fontSize: 16,
@@ -246,6 +320,9 @@ const styles = StyleSheet.create({
   selectedOptionButtonText: {
     color: colors.primaryGreen,
     fontFamily: fonts.semiBold,
+  },
+  eliminatedOptionButtonText: {
+    color: colors.gray,
   },
   submitButton: {
     backgroundColor: colors.primaryGreen,
