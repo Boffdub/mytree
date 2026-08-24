@@ -152,16 +152,16 @@ export default function OnboardingScreen({ navigation }) {
             </Text>
 
             {/*Buttons */}
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate('Register')}
+                onPress={() => navigation.navigate('Welcome')}
             >
                 <Text style={styles.primaryButtonText}>Register</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate('Welcome')}
             >
                 <Text style={styles.primaryButtonText}>Log In</Text>
             </TouchableOpacity>
