@@ -4,6 +4,22 @@ import { supabase } from './supabase';
 
 export const GUEST_STORAGE_KEY = '@mytree_guest_data';
 
+// crypto.randomUUID() isn't available in every browser/WebView (e.g. older Safari).
+// Guest IDs are only used locally, so a non-cryptographic fallback is fine here -
+// this must never throw, since it gates whether a quiz session can start at all.
+const safeRandomUUID = () => {
+  try {
+    return Crypto.randomUUID();
+  } catch (err) {
+    console.warn('[Storage] Crypto.randomUUID() unavailable, using fallback UUID:', err);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+};
+
 const emptyGuestData = () => ({
   guestId: null,
   score: 0,
@@ -29,7 +45,7 @@ export class StorageService {
 
   async _writeGuestData(data) {
     if (!data.guestId) {
-      data.guestId = Crypto.randomUUID();
+      data.guestId = safeRandomUUID();
     }
     await AsyncStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
   }
@@ -64,7 +80,7 @@ export class StorageService {
   async startSession(category) {
     if (this.authState.mode === 'guest') {
       const data = await this._readGuestData();
-      const sessionId = Crypto.randomUUID();
+      const sessionId = safeRandomUUID();
       data.sessions.push({
         id: sessionId,
         category,

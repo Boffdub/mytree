@@ -35,6 +35,11 @@ export default function QuestionScreen({ navigation, route }) {
     // State for which question number you're on (0 = first question)
     const [questionIndex, setQuestionIndex] = useState(0);
 
+    // If session creation hasn't finished (or failed) after a few seconds, let the user
+    // proceed anyway rather than leaving Submit disabled with no way forward - that one
+    // session's stats may not get saved, which is a much smaller problem than a stuck quiz.
+    const [sessionTimedOut, setSessionTimedOut] = useState(false);
+
     const { score, startSession, currentSessionId } = useGameContext();
 
     useEffect(() => {
@@ -55,6 +60,15 @@ export default function QuestionScreen({ navigation, route }) {
             startSession(categoryKey);
         }
     }, [category, route.params?.questionIndex]);
+
+    useEffect(() => {
+        if (currentSessionId) {
+            setSessionTimedOut(false);
+            return;
+        }
+        const timer = setTimeout(() => setSessionTimedOut(true), 4000);
+        return () => clearTimeout(timer);
+    }, [currentSessionId, category, route.params?.questionIndex]);
 
     return (
         <View style={styles.screenContainer}>
@@ -96,8 +110,8 @@ export default function QuestionScreen({ navigation, route }) {
                         {/* Submit Button - only shows when an answer is selected and session is ready */}
                         {selectedAnswer !== null && (
                             <TouchableOpacity
-                                style={[styles.submitButton, !currentSessionId && styles.submitButtonDisabled]}
-                                disabled={!currentSessionId}
+                                style={[styles.submitButton, (!currentSessionId && !sessionTimedOut) && styles.submitButtonDisabled]}
+                                disabled={!currentSessionId && !sessionTimedOut}
                                 onPress={() => {
                                     navigation.navigate('TreeAnimation', {
                                         fromScore: score,

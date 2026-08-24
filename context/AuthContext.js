@@ -13,6 +13,14 @@ const _webBase = typeof window !== 'undefined' && window.location?.origin
   : 'http://localhost:8081';
 export const REDIRECT_URI = Platform.OS === 'web' ? _webBase : 'mytree://auth-callback';
 
+const withTimeout = (promise, ms, label) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`[Auth] ${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+
 const parseSessionFromUrl = async (url) => {
   if (!url) return;
   const fragment = url.split('#')[1];
@@ -48,22 +56,37 @@ export const AuthProvider = ({ children }) => {
     let authSubscription;
     let linkingSubscription;
 
+    const fallBackToGuestOrWelcome = async () => {
+      try {
+        const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
+        setMode(guestFlag === 'true' ? 'guest' : 'welcome');
+      } catch (err) {
+        console.error('[Auth] Failed to read guest flag, defaulting to welcome:', err);
+        setMode('welcome');
+      }
+    };
+
     const init = async () => {
-      if (isSupabaseConfigured()) {
+      if (!isSupabaseConfigured()) {
+        await fallBackToGuestOrWelcome();
+        return;
+      }
+
+      try {
         // Handle app opened from a cold start via deep link (magic link in email)
         const initialUrl = await Linking.getInitialURL();
         if (initialUrl) {
           await parseSessionFromUrl(initialUrl);
         }
 
-        const { data } = await supabase.auth.getSession();
+        // Supabase may be unreachable (paused/misconfigured project) - never let this hang forever.
+        const { data } = await withTimeout(supabase.auth.getSession(), 5000, 'getSession');
         if (data.session) {
           setSession(data.session);
           setUser(data.session.user);
           setMode('auth');
         } else {
-          const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
-          setMode(guestFlag === 'true' ? 'guest' : 'welcome');
+          await fallBackToGuestOrWelcome();
         }
 
         const listener = supabase.auth.onAuthStateChange(async (event, newSession) => {
@@ -91,9 +114,9 @@ export const AuthProvider = ({ children }) => {
         linkingSubscription = Linking.addEventListener('url', ({ url }) => {
           parseSessionFromUrl(url);
         });
-      } else {
-        const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
-        setMode(guestFlag === 'true' ? 'guest' : 'welcome');
+      } catch (err) {
+        console.error('[Auth] Init failed, falling back to guest/welcome:', err);
+        await fallBackToGuestOrWelcome();
       }
     };
 
