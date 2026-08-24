@@ -52,6 +52,12 @@ yarn-error.*
 # TypeScript
 *.tsbuildinfo
 
+# Git worktrees
+.worktrees/
+
+# Supabase CLI local state
+supabase/.temp/
+
 # IDE / editor (optional)
 .idea/
 .vscode/
