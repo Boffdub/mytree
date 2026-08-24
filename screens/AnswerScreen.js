@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { colors } from '../constants/colors';
@@ -179,12 +179,11 @@ export default function AnswerScreen({ navigation, route }) {
                             )}
 
                             {/* Source Button */}
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.sourceButton}
                                 onPress={() => {
-                                    // TODO: Open source URL if available
                                     if (question && question.sourceUrl) {
-                                        // You can use Linking.openURL(question.sourceUrl) here later
+                                        Linking.openURL(question.sourceUrl);
                                     }
                                 }}
                             >

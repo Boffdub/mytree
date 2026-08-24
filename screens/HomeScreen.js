@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, Alert, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
@@ -46,7 +46,17 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.secondaryButtonText}>🌲 View Tree</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.secondaryButton}>
+            <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => {
+                    const message = 'Statistics tracking is on the way in a future update.';
+                    if (Platform.OS === 'web') {
+                        window.alert(message);
+                    } else {
+                        Alert.alert('Coming Soon', message);
+                    }
+                }}
+            >
                 <Text style={styles.secondaryButtonText}>📊 View Statistics</Text>
             </TouchableOpacity>
         </LinearGradient>
