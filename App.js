@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
+import OnboardingScreen from './screens/OnboardingScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 import EmailSignInScreen from './screens/EmailSignInScreen';
 import MagicLinkSentScreen from './screens/MagicLinkSentScreen';
@@ -38,7 +39,9 @@ function AppNavigator() {
     );
   }
 
-  const initialRoute = mode === 'welcome' ? 'Welcome' : 'Home';
+  // First-time/logged-out visitors (mode === 'welcome') see the onboarding carousel first.
+  // Returning guest/signed-in users skip straight to Home.
+  const initialRoute = mode === 'welcome' ? 'Onboarding' : 'Home';
 
   return (
     <NavigationContainer>
@@ -46,6 +49,7 @@ function AppNavigator() {
         initialRouteName={initialRoute}
         screenOptions={{ cardStyle: { flex: 1 }, headerShown: false }}
       >
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="MagicLinkSent" component={MagicLinkSentScreen} />
