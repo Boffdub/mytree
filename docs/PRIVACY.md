@@ -9,6 +9,7 @@ MyTree ("the app," "we," "us") is a climate education quiz app. This page explai
 **If you play as a guest:** nothing leaves your device. Your progress (score, quiz history) is stored locally in your browser or on your phone, tied to a random ID that isn't connected to your identity. If you clear your device's storage or switch devices, this data is gone — there's no backup, because we never see it.
 
 **If you create an account** (via Google, Apple, or email sign-in), we collect and store:
+
 - Your email address, and your name and profile picture if you sign in with Google or Apple and choose to share them
 - Your quiz activity: which questions you've answered, whether you got them right, and your scores over time
 
