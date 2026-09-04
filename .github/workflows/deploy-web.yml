@@ -10,6 +10,7 @@ on:
       - 'docs/**'
       - '**.md'
       - '.gitignore'
+  workflow_dispatch: {}
 
 jobs:
   deploy-web:
