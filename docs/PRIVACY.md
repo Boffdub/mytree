@@ -41,4 +41,4 @@ If this policy changes in a meaningful way, we'll update the date at the top of 
 
 ## Contact
 
-Questions about this policy or your data? Reach out at [insert contact email].
+Questions about this policy or your data? Contact the MyTree team.
