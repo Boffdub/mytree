@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.MyTree"
+      "bundleIdentifier": "com.brettduboff.mytree"
     },
     "android": {
       "adaptiveIcon": {
