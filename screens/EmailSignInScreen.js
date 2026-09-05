@@ -49,7 +49,7 @@ export default function EmailSignInScreen({ navigation }) {
 
         <Text style={styles.title}>Sign in with Email</Text>
         <Text style={styles.description}>
-          Enter your email and we'll send you a magic link to sign in — no password needed.
+          Enter your email and we'll send you a link to sign in. This is to verify you are a real person.
         </Text>
 
         <TextInput
