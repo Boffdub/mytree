@@ -1,8 +1,8 @@
-# MyTree Privacy Policy
+# My Tree Privacy Policy
 
 **Effective date:** September 4, 2026
 
-MyTree ("the app," "we," "us") is a climate education quiz app. This page explains what information we collect, why, and how you can control it.
+My Tree ("the app," "we," "us") is a climate education quiz app. This page explains what information we collect, why, and how you can control it.
 
 ## What we collect
 
@@ -29,11 +29,11 @@ For as long as your account exists. You can delete your account and all associat
 
 ## Future paid features
 
-MyTree is currently free. If we introduce paid features in the future, any payment will be handled by a third-party payment provider (such as the Apple App Store, Google Play, or a payment processor like Stripe) — we won't collect or store your card details ourselves. We'll update this policy when that happens.
+My Tree is currently free. If we introduce paid features in the future, any payment will be handled by a third-party payment provider (such as the Apple App Store, Google Play, or a payment processor like Stripe) — we won't collect or store your card details ourselves. We'll update this policy when that happens.
 
 ## Children's privacy
 
-MyTree is not directed at children under 13, and we don't knowingly collect information from children under 13. If you believe a child has created an account, contact us and we'll delete it.
+My Tree is not directed at children under 13, and we don't knowingly collect information from children under 13. If you believe a child has created an account, contact us and we'll delete it.
 
 ## Changes to this policy
 
@@ -41,4 +41,4 @@ If this policy changes in a meaningful way, we'll update the date at the top of 
 
 ## Contact
 
-Questions about this policy or your data? Contact the MyTree team.
+Questions about this policy or your data? Contact the My Tree team.
