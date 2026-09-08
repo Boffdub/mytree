@@ -6,8 +6,9 @@ import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function WelcomeScreen({ navigation }) {
-  const { continueAsGuest, signInWithGoogle, mode } = useAuthContext();
+  const { continueAsGuest, signInWithGoogle, signInWithApple, mode } = useAuthContext();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
 
   // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link)
   useEffect(() => {
@@ -16,8 +17,16 @@ export default function WelcomeScreen({ navigation }) {
     }
   }, [mode]);
 
-  const onAppleSignIn = () => {
-    Alert.alert('Coming soon', 'Sign in with Apple is not yet available.');
+  const onAppleSignIn = async () => {
+    setAppleLoading(true);
+    try {
+      await signInWithApple();
+      // navigation handled by mode useEffect above
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Apple sign-in failed. Please try again.');
+    } finally {
+      setAppleLoading(false);
+    }
   };
 
   const onGoogleSignIn = async () => {
@@ -54,8 +63,12 @@ export default function WelcomeScreen({ navigation }) {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.appleButton} onPress={onAppleSignIn}>
-          <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+        <TouchableOpacity style={styles.appleButton} onPress={onAppleSignIn} disabled={appleLoading}>
+          {appleLoading ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.googleButton} onPress={onGoogleSignIn} disabled={googleLoading}>

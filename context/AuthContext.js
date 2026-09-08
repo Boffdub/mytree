@@ -153,6 +153,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signInWithApple = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: REDIRECT_URI, skipBrowserRedirect: true },
+    });
+    if (error) throw error;
+    const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+    if (result.type === 'success') {
+      await parseSessionFromUrl(result.url);
+    }
+  };
+
   const signOut = async () => {
     if (isSupabaseConfigured()) {
       await supabase.auth.signOut();
@@ -168,6 +180,7 @@ export const AuthProvider = ({ children }) => {
     continueAsGuest,
     signInWithEmail,
     signInWithGoogle,
+    signInWithApple,
     signOut,
   };
 
