@@ -33,6 +33,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set web-only base path
+        # experiments.baseUrl must stay out of the committed app.json - it breaks native
+        # iOS/Android builds (causes an ENOTDIR asset-bundling failure). Only add it here,
+        # in this ephemeral checkout, right before the web export needs it. This step never
+        # gets committed back - "Commit and push docs" below only stages docs/.
+        run: |
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            config.expo.experiments = { baseUrl: '/mytree' };
+            fs.writeFileSync('app.json', JSON.stringify(config, null, 2));
+          "
+
       - name: Export web build
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
