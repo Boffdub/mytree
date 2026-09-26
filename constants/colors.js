@@ -5,7 +5,7 @@
 
 export const colors = {
   // Primary brand greens
-  primaryGreen: '#1E8F2D',
+  primaryGreen: '#0B6B2A',
   lightGreen: '#CEE7CF',
   lightGreenTransparent: 'rgba(206, 231, 207, 0.6)', // e.g. TreeScreen header
 

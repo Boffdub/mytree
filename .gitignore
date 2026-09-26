@@ -63,3 +63,13 @@ supabase/.temp/
 .vscode/
 *.swp
 *.swo
+
+# Personal scratch / reference files, not app source
+/Climate Questions MASTER SHEET.csv
+/Climate Trivia Game.pages
+/Test.html
+/tree-animation-tester.html
+/tree-tester.html
+/Apple.png
+/Google.png
+/IMPLEMENTATION_CHECKLIST.md

@@ -1,94 +1,129 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StorageService, GUEST_STORAGE_KEY } from '../services/storage';
+import { StorageService } from '../services/storage';
 
-describe('StorageService (guest mode)', () => {
-  const guestAuth = { mode: 'guest', user: null };
+jest.mock('../services/supabase', () => ({
+  supabase: {
+    from: jest.fn(),
+  },
+}));
 
-  beforeEach(async () => {
-    await AsyncStorage.clear();
+import { supabase } from '../services/supabase';
+
+describe('StorageService (auth mode)', () => {
+  const authState = { mode: 'auth', user: { id: 'user-abc' } };
+
+  beforeEach(() => {
+    supabase.from.mockReset();
   });
 
-  test('getScore returns 0 when no data exists', async () => {
-    const svc = new StorageService(guestAuth);
+  test('getScore sums is_correct attempts, clamped to 0-5', async () => {
+    supabase.from.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({
+          data: [{ is_correct: true }, { is_correct: true }, { is_correct: false }],
+          error: null,
+        }),
+      }),
+    });
+
+    const svc = new StorageService(authState);
     const score = await svc.getScore();
-    expect(score).toBe(0);
+
+    expect(score).toBe(1);
+    expect(supabase.from).toHaveBeenCalledWith('question_attempts');
   });
 
-  test('updateScore persists to AsyncStorage', async () => {
-    const svc = new StorageService(guestAuth);
-    await svc.updateScore(3);
+  test('startSession inserts a game_sessions row and returns its id', async () => {
+    const insert = jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({ data: { id: 'session-1' }, error: null }),
+      }),
+    });
+    supabase.from.mockReturnValue({ insert });
 
-    const raw = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
-    const data = JSON.parse(raw);
-    expect(data.score).toBe(3);
-  });
-
-  test('getScore returns persisted value', async () => {
-    const svc = new StorageService(guestAuth);
-    await svc.updateScore(4);
-
-    const svc2 = new StorageService(guestAuth);
-    const score = await svc2.getScore();
-    expect(score).toBe(4);
-  });
-
-  test('startSession creates a new session with generated id', async () => {
-    const svc = new StorageService(guestAuth);
+    const svc = new StorageService(authState);
     const sessionId = await svc.startSession('energy');
 
-    expect(sessionId).toBeTruthy();
-    expect(typeof sessionId).toBe('string');
+    expect(sessionId).toBe('session-1');
+    expect(insert).toHaveBeenCalledWith({ user_id: 'user-abc', category: 'energy', score: 0 });
   });
 
-  test('saveAnswer appends to current session', async () => {
-    const svc = new StorageService(guestAuth);
-    const sessionId = await svc.startSession('energy');
-    await svc.saveAnswer(sessionId, 'energy', 1, 2, false);
+  test('saveAnswer inserts a question_attempts row', async () => {
+    const insert = jest.fn().mockResolvedValue({ error: null });
+    supabase.from.mockReturnValue({ insert });
 
-    const attempts = await svc.getAnsweredQuestions('energy');
-    expect(attempts).toHaveLength(1);
-    expect(attempts[0]).toMatchObject({
-      questionId: 1,
-      selectedAnswer: 2,
-      isCorrect: false,
+    const svc = new StorageService(authState);
+    await svc.saveAnswer('session-1', 'energy', 1, 2, false);
+
+    expect(insert).toHaveBeenCalledWith({
+      session_id: 'session-1',
+      user_id: 'user-abc',
+      category: 'energy',
+      question_id: 1,
+      selected_answer: 2,
+      is_correct: false,
     });
   });
 
-  test('getAnsweredQuestions returns all when no category filter', async () => {
-    const svc = new StorageService(guestAuth);
-    const s1 = await svc.startSession('energy');
-    await svc.saveAnswer(s1, 'energy', 1, 2, false);
-    const s2 = await svc.startSession('transportation');
-    await svc.saveAnswer(s2, 'transportation', 1, 0, true);
+  test('completeSession scores from attempts and updates the session', async () => {
+    const update = jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({ error: null }),
+    });
+    supabase.from.mockImplementation((table) => {
+      if (table === 'question_attempts') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockResolvedValue({
+              data: [{ is_correct: true }, { is_correct: false }],
+              error: null,
+            }),
+          }),
+        };
+      }
+      if (table === 'game_sessions') return { update };
+      throw new Error(`Unexpected table: ${table}`);
+    });
 
-    const all = await svc.getAnsweredQuestions();
-    expect(all).toHaveLength(2);
+    const svc = new StorageService(authState);
+    await svc.completeSession('session-1');
+
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ score: 1 }));
   });
 
-  test('clearAllData removes guest data', async () => {
-    const svc = new StorageService(guestAuth);
-    await svc.updateScore(5);
-    await svc.clearAllData();
+  test('getAnsweredQuestions maps rows and applies an optional category filter', async () => {
+    const eq2 = jest.fn().mockResolvedValue({
+      data: [
+        {
+          question_id: 1,
+          selected_answer: 0,
+          is_correct: true,
+          category: 'energy',
+          answered_at: '2026-04-15T10:01:00Z',
+        },
+      ],
+      error: null,
+    });
+    const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+    supabase.from.mockReturnValue({
+      select: jest.fn().mockReturnValue({ eq: eq1 }),
+    });
 
-    const score = await svc.getScore();
-    expect(score).toBe(0);
+    const svc = new StorageService(authState);
+    const results = await svc.getAnsweredQuestions('energy');
+
+    expect(eq2).toHaveBeenCalledWith('category', 'energy');
+    expect(results).toEqual([
+      {
+        questionId: 1,
+        selectedAnswer: 0,
+        isCorrect: true,
+        category: 'energy',
+        answeredAt: '2026-04-15T10:01:00Z',
+      },
+    ]);
   });
 
-  test('guestId is generated on first use and persists', async () => {
-    const svc = new StorageService(guestAuth);
-    await svc.updateScore(1);
-
-    const raw = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
-    const data = JSON.parse(raw);
-    expect(data.guestId).toBeTruthy();
-
-    const firstId = data.guestId;
-
-    const svc2 = new StorageService(guestAuth);
-    await svc2.updateScore(2);
-
-    const raw2 = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
-    const data2 = JSON.parse(raw2);
-    expect(data2.guestId).toBe(firstId);
+  test('clearAllData throws, directing callers to the delete-account Edge Function', async () => {
+    const svc = new StorageService(authState);
+    await expect(svc.clearAllData()).rejects.toThrow('delete-account Edge Function');
   });
 });

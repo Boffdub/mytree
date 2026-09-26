@@ -1,22 +1,18 @@
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Image, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
-export default function HomeScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
+
     return (
         <LinearGradient
             colors={[colors.lightGreen, colors.white]}
             style={styles.container}
         >
             <StatusBar style="auto" />
-            <TouchableOpacity
-                style={styles.settingsButton}
-                onPress={() => navigation.navigate('Profile')}
-            >
-                <Image source={require('../assets/vectors/Profile.png')} style={styles.settingsIcon} resizeMode="contain" />
-            </TouchableOpacity>
 
             {/* Tree Icon */}
             <View style={styles.treeContainer}>
@@ -37,33 +33,19 @@ export default function HomeScreen({ navigation }) {
                 Answer questions about the climate to grow your virtual tree!
             </Text>
 
-            {/* Buttons */}
+            {/*Buttons */}
             <TouchableOpacity 
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate('Category')}
+                onPress={() => navigation.navigate('Register')}
             >
-                <Text style={styles.primaryButtonText}>Start Quiz</Text>
+                <Text style={styles.primaryButtonText}>Register</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-                style={styles.secondaryButton}
-                onPress={() => navigation.navigate('Tree')}
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Login')}
             >
-                <Text style={styles.secondaryButtonText}>🌲 View Tree</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => {
-                    const message = 'Statistics tracking is on the way in a future update.';
-                    if (Platform.OS === 'web') {
-                        window.alert(message);
-                    } else {
-                        Alert.alert('Coming Soon', message);
-                    }
-                }}
-            >
-                <Text style={styles.secondaryButtonText}>📊 View Statistics</Text>
+                <Text style={styles.primaryButtonText}>Log In</Text>
             </TouchableOpacity>
         </LinearGradient>
     );
@@ -80,8 +62,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     treeImage: {
-        width: 200,
-        height: 200,
+        width: 125,
+        height: 120,
     },
     title: {
         fontSize: 32,
@@ -100,7 +82,7 @@ const styles = StyleSheet.create({
         width: '75%',
     },
     primaryButton: {
-        backgroundColor: colors.primaryGreen,
+        backgroundColor: '#1E8F2D',
         paddingVertical: 15,
         paddingHorizontal: 40,
         borderRadius: 25,
@@ -113,31 +95,5 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         fontFamily: fonts.bold,
-    },
-    secondaryButton: {
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#1E8F2D',
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 25,
-        marginBottom: 15,
-        width: '100%',
-        alignItems: 'center',
-    },
-    secondaryButtonText: {
-        color: colors.primaryGreen,
-        fontSize: 16,
-        fontFamily: fonts.regular,
-    },
-    settingsButton: {
-        position: 'absolute',
-        top: 50,
-        right: 20,
-        padding: 10,
-    },
-    settingsIcon: {
-        width: 24,
-        height: 24,
     },
 });

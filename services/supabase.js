@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// Defer validation - app should still boot in guest mode if env vars missing.
+// Defer validation - app should still boot to the welcome screen if env vars are missing.
 // Auth operations will fail clearly at call time if unconfigured.
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(

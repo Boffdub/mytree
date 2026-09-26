@@ -6,13 +6,14 @@ import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 
 export default function WelcomeScreen({ navigation }) {
-  const { continueAsGuest, signInWithGoogle, signInWithApple, mode } = useAuthContext();
+  const { signInWithGoogle, signInWithApple, signInWithDevAccount, mode } = useAuthContext();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState(false);
 
   // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link)
   useEffect(() => {
-    if (mode === 'auth' || mode === 'guest') {
+    if (mode === 'auth') {
       navigation.replace('Home');
     }
   }, [mode]);
@@ -45,9 +46,16 @@ export default function WelcomeScreen({ navigation }) {
     navigation.navigate('EmailSignIn');
   };
 
-  const onGuest = async () => {
-    await continueAsGuest();
-    navigation.replace('Home');
+  const onDevSignIn = async () => {
+    setDevLoading(true);
+    try {
+      await signInWithDevAccount();
+      // navigation handled by mode useEffect above
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Dev sign-in failed. Please try again.');
+    } finally {
+      setDevLoading(false);
+    }
   };
 
   return (
@@ -83,9 +91,15 @@ export default function WelcomeScreen({ navigation }) {
           <Text style={styles.emailButtonText}>Sign in with Email</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.guestButton} onPress={onGuest}>
-          <Text style={styles.guestButtonText}>Continue as Guest →</Text>
-        </TouchableOpacity>
+        {__DEV__ && (
+          <TouchableOpacity style={styles.devButton} onPress={onDevSignIn} disabled={devLoading}>
+            {devLoading ? (
+              <ActivityIndicator color={colors.primaryGreen} />
+            ) : (
+              <Text style={styles.devButtonText}>Dev Sign-In (local testing only)</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </LinearGradient>
   );
@@ -163,13 +177,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: fonts.bold,
   },
-  guestButton: {
+  devButton: {
     paddingVertical: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.grayLight,
+    borderStyle: 'dashed',
+    borderRadius: 25,
   },
-  guestButtonText: {
-    color: colors.primaryGreen,
-    fontSize: 16,
+  devButtonText: {
+    color: colors.gray,
+    fontSize: 14,
     fontFamily: fonts.semiBold,
   },
 });

@@ -1,13 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Linking, Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
-import { migrateGuestToAuth } from '../services/migration';
 
 const AuthContext = createContext();
 
-const GUEST_MODE_FLAG = '@mytree_guest_mode_active';
 const _webBase = typeof window !== 'undefined' && window.location?.origin
   ? window.location.origin + (process.env.EXPO_PUBLIC_WEB_BASE_PATH || '')
   : 'http://localhost:8081';
@@ -47,7 +44,7 @@ export const useAuthContext = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // mode: 'loading' | 'welcome' | 'guest' | 'auth'
+  // mode: 'loading' | 'welcome' | 'auth'
   const [mode, setMode] = useState('loading');
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -56,19 +53,9 @@ export const AuthProvider = ({ children }) => {
     let authSubscription;
     let linkingSubscription;
 
-    const fallBackToGuestOrWelcome = async () => {
-      try {
-        const guestFlag = await AsyncStorage.getItem(GUEST_MODE_FLAG);
-        setMode(guestFlag === 'true' ? 'guest' : 'welcome');
-      } catch (err) {
-        console.error('[Auth] Failed to read guest flag, defaulting to welcome:', err);
-        setMode('welcome');
-      }
-    };
-
     const init = async () => {
       if (!isSupabaseConfigured()) {
-        await fallBackToGuestOrWelcome();
+        setMode('welcome');
         return;
       }
 
@@ -86,19 +73,11 @@ export const AuthProvider = ({ children }) => {
           setUser(data.session.user);
           setMode('auth');
         } else {
-          await fallBackToGuestOrWelcome();
+          setMode('welcome');
         }
 
-        const listener = supabase.auth.onAuthStateChange(async (event, newSession) => {
+        const listener = supabase.auth.onAuthStateChange((_event, newSession) => {
           if (newSession) {
-            if (event === 'SIGNED_IN') {
-              try {
-                await migrateGuestToAuth(newSession.user.id);
-              } catch (err) {
-                console.error('[Auth] Migration failed:', err);
-              }
-              await AsyncStorage.removeItem(GUEST_MODE_FLAG);
-            }
             setSession(newSession);
             setUser(newSession.user);
             setMode('auth');
@@ -115,8 +94,8 @@ export const AuthProvider = ({ children }) => {
           parseSessionFromUrl(url);
         });
       } catch (err) {
-        console.error('[Auth] Init failed, falling back to guest/welcome:', err);
-        await fallBackToGuestOrWelcome();
+        console.error('[Auth] Init failed, falling back to welcome:', err);
+        setMode('welcome');
       }
     };
 
@@ -127,11 +106,6 @@ export const AuthProvider = ({ children }) => {
       if (linkingSubscription) linkingSubscription.remove();
     };
   }, []);
-
-  const continueAsGuest = async () => {
-    await AsyncStorage.setItem(GUEST_MODE_FLAG, 'true');
-    setMode('guest');
-  };
 
   const signInWithEmail = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
@@ -169,18 +143,32 @@ export const AuthProvider = ({ children }) => {
     if (isSupabaseConfigured()) {
       await supabase.auth.signOut();
     }
-    await AsyncStorage.removeItem(GUEST_MODE_FLAG);
     setMode('welcome');
+  };
+
+  // Dev-only shortcut so local testing doesn't require clicking a magic link or
+  // completing OAuth every time. Requires a real Supabase user + EXPO_PUBLIC_DEV_EMAIL/
+  // EXPO_PUBLIC_DEV_PASSWORD in .env; never reachable in a production build (__DEV__ is
+  // false there, and WelcomeScreen only renders the button when __DEV__ is true too).
+  const signInWithDevAccount = async () => {
+    if (!__DEV__) throw new Error('Dev sign-in is only available in development builds');
+    const email = process.env.EXPO_PUBLIC_DEV_EMAIL;
+    const password = process.env.EXPO_PUBLIC_DEV_PASSWORD;
+    if (!email || !password) {
+      throw new Error('Set EXPO_PUBLIC_DEV_EMAIL and EXPO_PUBLIC_DEV_PASSWORD in .env to use dev sign-in');
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
   const value = {
     mode,
     user,
     session,
-    continueAsGuest,
     signInWithEmail,
     signInWithGoogle,
     signInWithApple,
+    signInWithDevAccount,
     signOut,
   };
 

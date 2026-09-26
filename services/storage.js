@@ -1,63 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
-
-export const GUEST_STORAGE_KEY = '@mytree_guest_data';
-
-// crypto.randomUUID() isn't available in every browser/WebView (e.g. older Safari).
-// Guest IDs are only used locally, so a non-cryptographic fallback is fine here -
-// this must never throw, since it gates whether a quiz session can start at all.
-const safeRandomUUID = () => {
-  try {
-    return Crypto.randomUUID();
-  } catch (err) {
-    console.warn('[Storage] Crypto.randomUUID() unavailable, using fallback UUID:', err);
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
-  }
-};
-
-const emptyGuestData = () => ({
-  guestId: null,
-  score: 0,
-  sessions: [],
-});
 
 export class StorageService {
   constructor(authState) {
     this.authState = authState;
   }
 
-  // ---- Guest storage helpers ----
-
-  async _readGuestData() {
-    const raw = await AsyncStorage.getItem(GUEST_STORAGE_KEY);
-    if (!raw) return emptyGuestData();
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return emptyGuestData();
-    }
-  }
-
-  async _writeGuestData(data) {
-    if (!data.guestId) {
-      data.guestId = safeRandomUUID();
-    }
-    await AsyncStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
-  }
-
-  // ---- Public API ----
-
   async getScore() {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      return data.score;
-    }
-    // auth mode: score derived from correct question_attempts
+    // score derived from correct question_attempts
     const { data: attempts, error } = await supabase
       .from('question_attempts')
       .select('is_correct')
@@ -68,30 +17,10 @@ export class StorageService {
   }
 
   async updateScore(newScore) {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      data.score = newScore;
-      await this._writeGuestData(data);
-      return;
-    }
-    // auth mode: score is derived from question_attempts; no direct update needed
+    // score is derived from question_attempts; no direct update needed
   }
 
   async startSession(category) {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      const sessionId = safeRandomUUID();
-      data.sessions.push({
-        id: sessionId,
-        category,
-        startedAt: new Date().toISOString(),
-        completedAt: null,
-        answers: [],
-      });
-      await this._writeGuestData(data);
-      return sessionId;
-    }
-    // auth mode
     const { data, error } = await supabase
       .from('game_sessions')
       .insert({
@@ -106,17 +35,6 @@ export class StorageService {
   }
 
   async completeSession(sessionId) {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      const session = data.sessions.find((s) => s.id === sessionId);
-      if (session) {
-        session.completedAt = new Date().toISOString();
-        session.score = session.answers.filter((a) => a.isCorrect).length;
-      }
-      await this._writeGuestData(data);
-      return;
-    }
-    // auth mode
     const { data: attempts, error: err1 } = await supabase
       .from('question_attempts')
       .select('is_correct')
@@ -131,20 +49,6 @@ export class StorageService {
   }
 
   async saveAnswer(sessionId, category, questionId, selectedAnswer, isCorrect) {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      const session = data.sessions.find((s) => s.id === sessionId);
-      if (!session) throw new Error(`Session ${sessionId} not found`);
-      session.answers.push({
-        questionId,
-        selectedAnswer,
-        isCorrect,
-        answeredAt: new Date().toISOString(),
-      });
-      await this._writeGuestData(data);
-      return;
-    }
-    // auth mode
     const { error } = await supabase.from('question_attempts').insert({
       session_id: sessionId,
       user_id: this.authState.user.id,
@@ -157,14 +61,6 @@ export class StorageService {
   }
 
   async getAnsweredQuestions(category = null) {
-    if (this.authState.mode === 'guest') {
-      const data = await this._readGuestData();
-      const all = data.sessions.flatMap((s) =>
-        s.answers.map((a) => ({ ...a, category: s.category }))
-      );
-      return category ? all.filter((a) => a.category === category) : all;
-    }
-    // auth mode
     let query = supabase
       .from('question_attempts')
       .select('question_id, selected_answer, is_correct, category, answered_at')
@@ -182,11 +78,6 @@ export class StorageService {
   }
 
   async clearAllData() {
-    if (this.authState.mode === 'guest') {
-      await AsyncStorage.removeItem(GUEST_STORAGE_KEY);
-      return;
-    }
-    // auth mode: handled by delete-account Edge Function
     throw new Error('clearAllData for authenticated users must use the delete-account Edge Function');
   }
 }

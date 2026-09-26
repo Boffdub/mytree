@@ -38,6 +38,16 @@ CREATE TABLE public.question_attempts (
 CREATE INDEX idx_question_attempts_user ON public.question_attempts(user_id);
 CREATE INDEX idx_question_attempts_session ON public.question_attempts(session_id);
 
+CREATE TABLE public.feedback (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_feedback_user ON public.feedback(user_id);
+
 -- ============================================================
 -- Row Level Security
 -- ============================================================
@@ -45,6 +55,7 @@ CREATE INDEX idx_question_attempts_session ON public.question_attempts(session_i
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.game_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.question_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can CRUD their own row
 CREATE POLICY "Users select own profile" ON public.profiles
@@ -75,6 +86,10 @@ CREATE POLICY "Users update own attempts" ON public.question_attempts
   FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users delete own attempts" ON public.question_attempts
   FOR DELETE USING (auth.uid() = user_id);
+
+-- Feedback: users can submit but not read back (Brett reviews via the Supabase dashboard)
+CREATE POLICY "Users insert own feedback" ON public.feedback
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
 -- Auto-create profile on signup

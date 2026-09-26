@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { colors } from './constants/colors';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   Montserrat_400Regular,
@@ -23,7 +24,14 @@ import AnswerScreen from './screens/AnswerScreen';
 import TreeAnimationScreen from './screens/TreeAnimationScreen';
 import TreeScreen from './screens/TreeScreen';
 import SettingsScreen from './screens/SettingsScreen';
-import { colors } from './constants/colors';
+import ProfileScreen from './screens/ProfileScreen';
+import EditProfileScreen from './screens/EditProfileScreen';
+import AboutScreen from './screens/AboutScreen';
+import NotificationsScreen from './screens/NotificationsScreen';
+import HowToPlay from './screens/HowToPlayScreen'; 
+import ContactUsScreen from './screens/ContactUsScreen';
+import WebViewScreen from './screens/WebViewScreen';
+
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
@@ -40,7 +48,7 @@ function AppNavigator() {
   }
 
   // First-time/logged-out visitors (mode === 'welcome') see the onboarding carousel first.
-  // Returning guest/signed-in users skip straight to Home.
+  // Returning signed-in users skip straight to Home.
   const initialRoute = mode === 'welcome' ? 'Onboarding' : 'Home';
 
   return (
@@ -59,7 +67,18 @@ function AppNavigator() {
         <Stack.Screen name="TreeAnimation" component={TreeAnimationScreen} />
         <Stack.Screen name="Answer" component={AnswerScreen} />
         <Stack.Screen name="Tree" component={TreeScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{ presentation: 'transparentModal', detachPreviousScreen: false }}
+        />
+        <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="How To Play" component={HowToPlay} />
+        <Stack.Screen name="Contact Us" component={ContactUsScreen} />
+        <Stack.Screen name="WebView" component={WebViewScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
