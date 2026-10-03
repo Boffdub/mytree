@@ -122,7 +122,7 @@ export default function StatisticsScreen({ navigation }) {
           </View>
         </View>
 
-        <View style={styles.barCard}>
+        <View style={styles.treesCard}>
             <Image source={require('../assets/vectors/Tree.png')} style={styles.treesIcon} resizeMode="contain" />
             <Text style={styles.treesNumber}>{treesEarned}</Text>
             <Text style={styles.treesLabel}>{treesEarned === 1 ? 'Tree Earned' : 'Trees Earned'}</Text>
@@ -293,10 +293,22 @@ const styles = StyleSheet.create({
   categoryIcon: { width: 22, height: 22, marginRight: 6 },
   categoryLabel: { fontSize: 11, fontFamily: fonts.regular, color: colors.black, flexShrink: 1 },
 
-  questionsCard: { flexDirection: 'row', alignItems: 'center', gap: 10,},
-  totalQuestions: {alignItems: 'center', },
+  questionsCard: { flexDirection: 'row', alignItems: 'center', gap: 20,},
+  totalQuestions: {alignItems: 'center', width: 250, },
   numberQuestions: { fontSize: 28, fontFamily: fonts.bold, }, 
   buttonIcon: { width: 45, height: 45,},
+
+  treesCard: {
+    backgroundColor: colors.white,
+    borderWidth: 3,
+    borderColor: colors.grayLight,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 15,
+  },
 
   barCard: {
     backgroundColor: colors.white,
@@ -305,7 +317,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    alignItems: 'center',
+    alignItems: 'stretch',
     marginBottom: 20,
     padding: 15,
   },
