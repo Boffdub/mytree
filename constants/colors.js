@@ -13,12 +13,11 @@ export const colors = {
   white: '#FFFFFF',
   black: '#000000',
   gray: '#666666',
-  grayLight: '#E0E0E0',
-  grayPlaceholder: '#D9D9D9',
+  grayLight: '#D9D9D9',
 
   // Semantic (correct / incorrect)
-  errorRed: '#F44336',
-  errorRedLight: '#FFEBEE',
+  primaryRed: '#D30707',
+  lightRed: '#FCB5B5',
 
   // Tree visualization (TreeComponent)
   treeTrunk: '#0B6B2A',

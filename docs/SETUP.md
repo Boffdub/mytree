@@ -51,6 +51,15 @@ Added in Supabase under **Authentication → URL Configuration → Redirect URLs
 
 - `mytree://auth-callback` (native deep link)
 - `http://localhost:8081` (web dev server)
+- `https://boffdub.github.io/mytree` (production web build, GitHub Pages)
+
+### Email delivery (SMTP)
+
+Auth emails (magic link, etc.) are sent through **Resend** as a custom SMTP provider, configured in Supabase under **Authentication → Emails**, rather than Supabase's default built-in mailer. The built-in mailer is rate-limited to a handful of emails per hour shared across the whole project — fine for occasional local testing, but it will 429 ("email rate limit exceeded") under any real usage.
+
+- Sending domain: `mytree.brettduboff.com`, a subdomain of Brett's personal domain, verified in Resend (DKIM/SPF/DMARC DNS records added at the domain's DNS host).
+- SMTP credentials: host `smtp.resend.com`, port `465`, user `resend`, password = a Resend API key (Resend dashboard → API Keys) scoped to **Sending access**.
+- If a new API key is ever needed, creating one doesn't affect or invalidate others — the feedback-email pipeline uses its own separate key and is unaffected by changes here.
 
 ### Edge Function
 

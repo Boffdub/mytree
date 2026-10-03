@@ -6,6 +6,7 @@ import { supabase } from '../services/supabase';
 import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 import ScreenHeader from '../components/ScreenHeader';
+import { CurrentRenderContext } from '@react-navigation/native';
 
 const PRIVACY_POLICY_URL = 'https://boffdub.github.io/mytree/privacy.html';
 const TERMS_OF_SERVICE_URL = 'https://boffdub.github.io/mytree/terms.html';
@@ -112,17 +113,18 @@ export default function SettingsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  body: { flex: 1 },
-  bodyContent: { padding: 20 },
+  body: { flex: 1, },
+  bodyContent: { padding: 20, },
   button: {
     backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: colors.black,
-    paddingVertical: 15,
+    paddingVertical: 10,
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 12,
   },
+  
   buttonText: {
     color: colors.black,
     fontSize: 16,
@@ -132,14 +134,14 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: colors.white,
     borderWidth: 2,
-    borderColor: colors.errorRed,
+    borderColor: colors.primaryRed,
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 30,
   },
   dangerButtonText: {
-    color: colors.errorRed,
+    color: colors.primaryRed,
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: fonts.bold,

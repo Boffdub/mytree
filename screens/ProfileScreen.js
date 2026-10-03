@@ -8,12 +8,13 @@ import { colors } from '../constants/colors';
 import { fonts } from '../styles/defaultStyles';
 import { getProfile } from '../services/profile';
 import { useFocusEffect } from '@react-navigation/native';
+import { calculateStreak } from '../utils/streak';
 
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const auth = useAuthContext();
-  const [stats, setStats] = useState({ answered: 0, correct: 0 });
+  const [stats, setStats] = useState({ answered: 0, correct: 0, streak: 0 });
   const [profile, setProfile] = useState({ firstName: null, lastName: null, avatarUrl: null });
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function ProfileScreen({ navigation }) {
       setStats({
         answered: attempts.length,
         correct: attempts.filter((a) => a.isCorrect).length,
+        streak: calculateStreak(attempts.map((a) => a.answeredAt)),
       });
     });
   }, [auth.user?.id]);
@@ -68,7 +70,7 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.statLabel}>Correct</Text>
         </View>
         <View style={styles.statPill}>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{stats.streak}</Text>
           <Text style={styles.statLabel}>Day{'\n'}Streak</Text>
         </View>
         <View style={styles.statPill}>
@@ -77,10 +79,11 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Statistics')}>
         <Image source={require('../assets/vectors/Stats.png')} style={styles.buttonIcon} resizeMode="contain" />
         <Text style={styles.buttonText}>View Full Statistics</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate('EditProfile', {

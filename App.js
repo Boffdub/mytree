@@ -25,6 +25,7 @@ import TreeAnimationScreen from './screens/TreeAnimationScreen';
 import TreeScreen from './screens/TreeScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import StatisticsScreen from './screens/StatisticsScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import AboutScreen from './screens/AboutScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
@@ -68,6 +69,7 @@ function AppNavigator() {
         <Stack.Screen name="Answer" component={AnswerScreen} />
         <Stack.Screen name="Tree" component={TreeScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Statistics" component={StatisticsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen
           name="EditProfile"

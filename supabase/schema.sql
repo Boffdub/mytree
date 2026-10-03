@@ -91,6 +91,52 @@ CREATE POLICY "Users delete own attempts" ON public.question_attempts
 CREATE POLICY "Users insert own feedback" ON public.feedback
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Fix drift: services/profile.js reads/writes first_name/last_name,
+-- but the live DB was altered by hand without updating this file.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS last_name TEXT;
+
+-- Leaderboard: aggregates question_attempts per user, ranked by total
+-- correct answers, with percent accurate as the tiebreaker. SECURITY DEFINER
+-- so authenticated users can read aggregate counts + names across all users,
+-- despite question_attempts/profiles RLS being strictly auth.uid()-scoped.
+-- Exposes ONLY display name + counts — no question-level data, no email, no avatar_url.
+DROP FUNCTION IF EXISTS public.get_leaderboard(TIMESTAMPTZ);
+
+CREATE FUNCTION public.get_leaderboard(window_start TIMESTAMPTZ DEFAULT NULL)
+RETURNS TABLE (
+  rank BIGINT,
+  user_id UUID,
+  display_name TEXT,
+  total_correct BIGINT,
+  accuracy NUMERIC
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT
+    RANK() OVER (
+      ORDER BY COUNT(*) FILTER (WHERE qa.is_correct) DESC,
+               ROUND(COUNT(*) FILTER (WHERE qa.is_correct)::NUMERIC / COUNT(*) * 100) DESC
+    ) AS rank,
+    qa.user_id,
+    COALESCE(NULLIF(TRIM(CONCAT(p.first_name, ' ', p.last_name)), ''), 'Anonymous') AS display_name,
+    COUNT(*) FILTER (WHERE qa.is_correct) AS total_correct,
+    ROUND(COUNT(*) FILTER (WHERE qa.is_correct)::NUMERIC / COUNT(*) * 100) AS accuracy
+  FROM public.question_attempts qa
+  JOIN public.profiles p ON p.id = qa.user_id
+  WHERE window_start IS NULL OR qa.answered_at >= window_start
+  GROUP BY qa.user_id, p.first_name, p.last_name
+  ORDER BY total_correct DESC, accuracy DESC;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_leaderboard(TIMESTAMPTZ) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_leaderboard(TIMESTAMPTZ) TO authenticated;
+
+
 -- ============================================================
 -- Auto-create profile on signup
 -- ============================================================

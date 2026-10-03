@@ -31,7 +31,13 @@ export default function EmailSignInScreen({ navigation }) {
       await signInWithEmail(trimmed);
       navigation.navigate('MagicLinkSent', { email: trimmed });
     } catch (err) {
-      Alert.alert('Error', err.message || 'Failed to send magic link. Please try again.');
+      const isRateLimited = err.status === 429 || /rate limit/i.test(err.message || '');
+      Alert.alert(
+        isRateLimited ? 'Too Many Attempts' : 'Error',
+        isRateLimited
+          ? "You've requested too many sign-in links recently. Please wait a few minutes and try again."
+          : err.message || 'Failed to send magic link. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

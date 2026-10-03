@@ -49,21 +49,16 @@ export default function HomeScreen({ navigation }) {
                 style={styles.secondaryButton}
                 onPress={() => navigation.navigate('Tree')}
             >
-                <Text style={styles.secondaryButtonText}>🌲 View Tree</Text>
+                <Image source={require('../assets/vectors/Tree.png')} style={styles.buttonIcon} resizeMode="contain" />
+                <Text style={styles.secondaryButtonText}>View Tree</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => {
-                    const message = 'Statistics tracking is on the way in a future update.';
-                    if (Platform.OS === 'web') {
-                        window.alert(message);
-                    } else {
-                        Alert.alert('Coming Soon', message);
-                    }
-                }}
-            >
-                <Text style={styles.secondaryButtonText}>📊 View Statistics</Text>
+                onPress={() => navigation.navigate('Statistics')}
+            >   
+                <Image source={require('../assets/vectors/Stats.png')} style={styles.buttonIcon} resizeMode="contain" />
+                <Text style={styles.secondaryButtonText}> View Statistics</Text>
             </TouchableOpacity>
         </LinearGradient>
     );
@@ -108,6 +103,7 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
     },
+    buttonIcon: { width: 25, height: 25, marginRight: 10 },
     primaryButtonText: {
         color: colors.white,
         fontSize: 18,
@@ -115,12 +111,15 @@ const styles = StyleSheet.create({
         fontFamily: fonts.bold,
     },
     secondaryButton: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         borderWidth: 2,
-        borderColor: '#1E8F2D',
+        borderColor: colors.primaryGreen,
         paddingVertical: 15,
         paddingHorizontal: 40,
         borderRadius: 25,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
         marginBottom: 15,
         width: '100%',
         alignItems: 'center',
