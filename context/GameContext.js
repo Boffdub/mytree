@@ -1,13 +1,19 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { StorageService } from '../services/storage';
-import { useAuthContext } from './AuthContext';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import { StorageService } from "../services/storage";
+import { useAuthContext } from "./AuthContext";
 
 const GameContext = createContext();
 
 export const useGameContext = () => {
   const context = useContext(GameContext);
   if (!context) {
-    throw new Error('useGameContext must be used within GameProvider');
+    throw new Error("useGameContext must be used within GameProvider");
   }
   return context;
 };
@@ -23,7 +29,7 @@ export const GameProvider = ({ children }) => {
   const MAX_SCORE = 5;
 
   useEffect(() => {
-    if (auth.mode === 'loading' || auth.mode === 'welcome') {
+    if (auth.mode === "loading" || auth.mode === "welcome") {
       setIsLoading(false);
       return;
     }
@@ -38,7 +44,7 @@ export const GameProvider = ({ children }) => {
         }
       })
       .catch((err) => {
-        console.error('[GameContext] Failed to load score:', err);
+        console.error("[GameContext] Failed to load score:", err);
         if (!cancelled) {
           setScore(0);
           setIsLoading(false);
@@ -55,7 +61,7 @@ export const GameProvider = ({ children }) => {
     try {
       await storage.updateScore(next);
     } catch (err) {
-      console.error('[GameContext] Failed to persist score:', err);
+      console.error("[GameContext] Failed to persist score:", err);
     }
   }, [score, storage]);
 
@@ -65,7 +71,7 @@ export const GameProvider = ({ children }) => {
     try {
       await storage.updateScore(next);
     } catch (err) {
-      console.error('[GameContext] Failed to persist score:', err);
+      console.error("[GameContext] Failed to persist score:", err);
     }
   }, [score, storage]);
 
@@ -74,7 +80,7 @@ export const GameProvider = ({ children }) => {
     try {
       await storage.updateScore(0);
     } catch (err) {
-      console.error('[GameContext] Failed to reset score:', err);
+      console.error("[GameContext] Failed to reset score:", err);
     }
   }, [storage]);
 
@@ -85,26 +91,32 @@ export const GameProvider = ({ children }) => {
         setCurrentSessionId(id);
         return id;
       } catch (err) {
-        console.error('[GameContext] Failed to start session:', err);
+        console.error("[GameContext] Failed to start session:", err);
         return null;
       }
     },
-    [storage]
+    [storage],
   );
 
   const saveAnswer = useCallback(
     async (category, questionId, selectedAnswer, isCorrect) => {
       if (!currentSessionId) {
-        console.warn('[GameContext] saveAnswer called without active session');
+        console.warn("[GameContext] saveAnswer called without active session");
         return;
       }
       try {
-        await storage.saveAnswer(currentSessionId, category, questionId, selectedAnswer, isCorrect);
+        await storage.saveAnswer(
+          currentSessionId,
+          category,
+          questionId,
+          selectedAnswer,
+          isCorrect,
+        );
       } catch (err) {
-        console.error('[GameContext] Failed to save answer:', err);
+        console.error("[GameContext] Failed to save answer:", err);
       }
     },
-    [currentSessionId, storage]
+    [currentSessionId, storage],
   );
 
   const completeSession = useCallback(async () => {
@@ -112,7 +124,7 @@ export const GameProvider = ({ children }) => {
     try {
       await storage.completeSession(currentSessionId);
     } catch (err) {
-      console.error('[GameContext] Failed to complete session:', err);
+      console.error("[GameContext] Failed to complete session:", err);
     }
     setCurrentSessionId(null);
   }, [currentSessionId, storage]);

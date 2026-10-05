@@ -1,20 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuthContext } from '../context/AuthContext';
-import { colors } from '../constants/colors';
-import { fonts } from '../styles/defaultStyles';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuthContext } from "../context/AuthContext";
+import { colors } from "../constants/colors";
+import { fonts } from "../styles/defaultStyles";
 
 export default function WelcomeScreen({ navigation }) {
-  const { signInWithGoogle, signInWithApple, signInWithDevAccount, mode } = useAuthContext();
+  const { signInWithGoogle, signInWithApple, signInWithDevAccount, mode } =
+    useAuthContext();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [devLoading, setDevLoading] = useState(false);
 
   // Navigate to Home once auth succeeds (e.g. after Google OAuth or magic link)
   useEffect(() => {
-    if (mode === 'auth') {
-      navigation.replace('Home');
+    if (mode === "auth") {
+      navigation.replace("Home");
     }
   }, [mode]);
 
@@ -24,7 +33,10 @@ export default function WelcomeScreen({ navigation }) {
       await signInWithApple();
       // navigation handled by mode useEffect above
     } catch (err) {
-      Alert.alert('Error', err.message || 'Apple sign-in failed. Please try again.');
+      Alert.alert(
+        "Error",
+        err.message || "Apple sign-in failed. Please try again.",
+      );
     } finally {
       setAppleLoading(false);
     }
@@ -36,14 +48,17 @@ export default function WelcomeScreen({ navigation }) {
       await signInWithGoogle();
       // navigation handled by mode useEffect above
     } catch (err) {
-      Alert.alert('Error', err.message || 'Google sign-in failed. Please try again.');
+      Alert.alert(
+        "Error",
+        err.message || "Google sign-in failed. Please try again.",
+      );
     } finally {
       setGoogleLoading(false);
     }
   };
 
   const onEmailSignIn = () => {
-    navigation.navigate('EmailSignIn');
+    navigation.navigate("EmailSignIn");
   };
 
   const onDevSignIn = async () => {
@@ -52,26 +67,38 @@ export default function WelcomeScreen({ navigation }) {
       await signInWithDevAccount();
       // navigation handled by mode useEffect above
     } catch (err) {
-      Alert.alert('Error', err.message || 'Dev sign-in failed. Please try again.');
+      Alert.alert(
+        "Error",
+        err.message || "Dev sign-in failed. Please try again.",
+      );
     } finally {
       setDevLoading(false);
     }
   };
 
   return (
-    <LinearGradient colors={[colors.lightGreen, colors.white]} style={styles.container}>
+    <LinearGradient
+      colors={[colors.lightGreen, colors.white]}
+      style={styles.container}
+    >
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/image/My_Tree_Logo.png')}
+          source={require("../assets/image/My_Tree_Logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
         <Text style={styles.title}>My Tree</Text>
-        <Text style={styles.tagline}>Grow your tree by learning about climate</Text>
+        <Text style={styles.tagline}>
+          Grow your tree by learning about climate
+        </Text>
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.appleButton} onPress={onAppleSignIn} disabled={appleLoading}>
+        <TouchableOpacity
+          style={styles.appleButton}
+          onPress={onAppleSignIn}
+          disabled={appleLoading}
+        >
           {appleLoading ? (
             <ActivityIndicator color={colors.white} />
           ) : (
@@ -79,7 +106,11 @@ export default function WelcomeScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.googleButton} onPress={onGoogleSignIn} disabled={googleLoading}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={onGoogleSignIn}
+          disabled={googleLoading}
+        >
           {googleLoading ? (
             <ActivityIndicator color={colors.black} />
           ) : (
@@ -92,11 +123,17 @@ export default function WelcomeScreen({ navigation }) {
         </TouchableOpacity>
 
         {__DEV__ && (
-          <TouchableOpacity style={styles.devButton} onPress={onDevSignIn} disabled={devLoading}>
+          <TouchableOpacity
+            style={styles.devButton}
+            onPress={onDevSignIn}
+            disabled={devLoading}
+          >
             {devLoading ? (
               <ActivityIndicator color={colors.primaryGreen} />
             ) : (
-              <Text style={styles.devButtonText}>Dev Sign-In (local testing only)</Text>
+              <Text style={styles.devButtonText}>
+                Dev Sign-In (local testing only)
+              </Text>
             )}
           </TouchableOpacity>
         )}
@@ -108,11 +145,11 @@ export default function WelcomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 30,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 60,
   },
   logo: {
@@ -122,7 +159,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.black,
     marginBottom: 8,
     fontFamily: fonts.bold,
@@ -130,23 +167,23 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 16,
     color: colors.gray,
-    textAlign: 'center',
+    textAlign: "center",
     fontFamily: fonts.regular,
   },
   buttonContainer: {
-    width: '100%',
+    width: "100%",
   },
   appleButton: {
     backgroundColor: colors.black,
     paddingVertical: 15,
     borderRadius: 25,
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   appleButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: fonts.bold,
   },
   googleButton: {
@@ -156,12 +193,12 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   googleButtonText: {
     color: colors.black,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: fonts.bold,
   },
   emailButton: {
@@ -169,20 +206,20 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emailButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: fonts.bold,
   },
   devButton: {
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.grayLight,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 25,
   },
   devButtonText: {

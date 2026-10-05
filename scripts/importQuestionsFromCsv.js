@@ -11,16 +11,19 @@
 // rows to the bottom of the sheet keeps existing IDs stable; reordering existing
 // rows will shift IDs.
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const CSV_PATH = path.join(__dirname, '../Climate Questions MASTER SHEET - Accumulative.csv');
-const OUTPUT_PATH = path.join(__dirname, '../data/questions.js');
+const CSV_PATH = path.join(
+  __dirname,
+  "../Climate Questions MASTER SHEET - Accumulative.csv",
+);
+const OUTPUT_PATH = path.join(__dirname, "../data/questions.js");
 
 function parseCSV(text) {
   const rows = [];
   let row = [];
-  let field = '';
+  let field = "";
   let inQuotes = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -36,15 +39,15 @@ function parseCSV(text) {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ',') {
+    } else if (c === ",") {
       row.push(field);
-      field = '';
-    } else if (c === '\n') {
+      field = "";
+    } else if (c === "\n") {
       row.push(field);
       rows.push(row);
       row = [];
-      field = '';
-    } else if (c === '\r') {
+      field = "";
+    } else if (c === "\r") {
       // skip
     } else {
       field += c;
@@ -58,80 +61,84 @@ function parseCSV(text) {
 }
 
 function normalizeDifficulty(raw) {
-  const v = (raw || '').trim().toLowerCase();
-  if (v === 'easy') return 'Easy';
-  if (v === 'medium') return 'Medium';
-  if (v === 'hard') return 'Hard';
+  const v = (raw || "").trim().toLowerCase();
+  if (v === "easy") return "Easy";
+  if (v === "medium") return "Medium";
+  if (v === "hard") return "Hard";
   return null; // untagged ("---" or blank)
 }
 
 function sourceNameFromUrl(url) {
   if (!url) return null;
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return null;
   }
 }
 
 function jsString(str) {
-  return JSON.stringify(str || '');
+  return JSON.stringify(str || "");
 }
 
 function main() {
-  const csv = fs.readFileSync(CSV_PATH, 'utf8');
+  const csv = fs.readFileSync(CSV_PATH, "utf8");
   const rows = parseCSV(csv);
   const header = rows[0];
   const dataRows = rows.slice(1).filter((r) => r.some((c) => c && c.trim()));
 
   const col = (name) => header.indexOf(name);
   const idx = {
-    question: col('Question'),
-    choiceA: col('Choice A'),
-    choiceB: col('Choice B'),
-    choiceC: col('Choice C'),
-    choiceD: col('Choice D'),
-    correct: col('Correct choice (0=A, 1=B, 2=C, 3=D)'),
-    source: col('Source'),
-    categories: col('Categories (use \',\' to separate)'),
-    difficulty: col('Difficulty (easy, medium, hard)'),
-    notes: col('Notes'),
-    explanation: col('Brief explanation, Why it matters?'),
+    question: col("Question"),
+    choiceA: col("Choice A"),
+    choiceB: col("Choice B"),
+    choiceC: col("Choice C"),
+    choiceD: col("Choice D"),
+    correct: col("Correct choice (0=A, 1=B, 2=C, 3=D)"),
+    source: col("Source"),
+    categories: col("Categories (use ',' to separate)"),
+    difficulty: col("Difficulty (easy, medium, hard)"),
+    notes: col("Notes"),
+    explanation: col("Brief explanation, Why it matters?"),
     trailing: header.length - 1, // unlabeled last column - occasional stray source URL
   };
 
   const questions = dataRows.map((r, i) => {
-    const options = [r[idx.choiceA], r[idx.choiceB], r[idx.choiceC], r[idx.choiceD]].map((s) =>
-      (s || '').trim()
-    );
-    const correctIdx = parseInt((r[idx.correct] || '').trim(), 10);
-    const categories = (r[idx.categories] || '')
-      .split(',')
+    const options = [
+      r[idx.choiceA],
+      r[idx.choiceB],
+      r[idx.choiceC],
+      r[idx.choiceD],
+    ].map((s) => (s || "").trim());
+    const correctIdx = parseInt((r[idx.correct] || "").trim(), 10);
+    const categories = (r[idx.categories] || "")
+      .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    const sourceUrl = (r[idx.source] || '').trim() || (r[idx.trailing] || '').trim() || null;
+    const sourceUrl =
+      (r[idx.source] || "").trim() || (r[idx.trailing] || "").trim() || null;
 
     return {
       id: i + 1,
-      question: (r[idx.question] || '').trim(),
+      question: (r[idx.question] || "").trim(),
       options,
       correct: Number.isNaN(correctIdx) ? null : correctIdx,
-      categories: categories.length ? categories : ['Uncategorized'],
+      categories: categories.length ? categories : ["Uncategorized"],
       difficulty: normalizeDifficulty(r[idx.difficulty]),
-      explanation: (r[idx.explanation] || '').trim() || null,
+      explanation: (r[idx.explanation] || "").trim() || null,
       source: sourceNameFromUrl(sourceUrl),
       sourceUrl,
       infographic: null, // no infographic data in the sheet yet
-      notes: (r[idx.notes] || '').trim() || null,
+      notes: (r[idx.notes] || "").trim() || null,
     };
   });
 
   const incomplete = questions.filter(
-    (q) => !q.question || q.options.some((o) => !o) || q.correct === null
+    (q) => !q.question || q.options.some((o) => !o) || q.correct === null,
   );
   if (incomplete.length) {
     console.warn(
-      `Warning: ${incomplete.length} row(s) missing question text, an option, or a correct-answer index. These were still imported - check the sheet for gaps.`
+      `Warning: ${incomplete.length} row(s) missing question text, an option, or a correct-answer index. These were still imported - check the sheet for gaps.`,
     );
   }
 
@@ -140,18 +147,18 @@ function main() {
       return `  {
     id: ${q.id},
     question: ${jsString(q.question)},
-    options: [${q.options.map(jsString).join(', ')}],
-    correct: ${q.correct === null ? 'null' : q.correct},
-    categories: [${q.categories.map(jsString).join(', ')}],
-    difficulty: ${q.difficulty ? jsString(q.difficulty) : 'null'},
-    explanation: ${q.explanation ? jsString(q.explanation) : 'null'},
-    source: ${q.source ? jsString(q.source) : 'null'},
-    sourceUrl: ${q.sourceUrl ? jsString(q.sourceUrl) : 'null'},
-    infographic: ${q.infographic ? jsString(q.infographic) : 'null'},
-    notes: ${q.notes ? jsString(q.notes) : 'null'},
+    options: [${q.options.map(jsString).join(", ")}],
+    correct: ${q.correct === null ? "null" : q.correct},
+    categories: [${q.categories.map(jsString).join(", ")}],
+    difficulty: ${q.difficulty ? jsString(q.difficulty) : "null"},
+    explanation: ${q.explanation ? jsString(q.explanation) : "null"},
+    source: ${q.source ? jsString(q.source) : "null"},
+    sourceUrl: ${q.sourceUrl ? jsString(q.sourceUrl) : "null"},
+    infographic: ${q.infographic ? jsString(q.infographic) : "null"},
+    notes: ${q.notes ? jsString(q.notes) : "null"},
   }`;
     })
-    .join(',\n');
+    .join(",\n");
 
   const fileContents = `// Auto-generated by scripts/importQuestionsFromCsv.js - do not hand-edit.
 // Source of truth: "Climate Questions MASTER SHEET - Accumulative.csv"
@@ -197,13 +204,15 @@ export const getQuestionCountByDifficulty = (difficulty) =>
 `;
 
   fs.writeFileSync(OUTPUT_PATH, fileContents);
-  console.log(`Wrote ${questions.length} questions to ${path.relative(process.cwd(), OUTPUT_PATH)}`);
+  console.log(
+    `Wrote ${questions.length} questions to ${path.relative(process.cwd(), OUTPUT_PATH)}`,
+  );
 
   const byDifficulty = { Easy: 0, Medium: 0, Hard: 0, untagged: 0 };
   questions.forEach((q) => {
-    byDifficulty[q.difficulty || 'untagged']++;
+    byDifficulty[q.difficulty || "untagged"]++;
   });
-  console.log('By difficulty:', byDifficulty);
+  console.log("By difficulty:", byDifficulty);
 }
 
 main();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,34 +9,35 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuthContext } from '../context/AuthContext';
-import { colors } from '../constants/colors';
-import { fonts } from '../styles/defaultStyles';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuthContext } from "../context/AuthContext";
+import { colors } from "../constants/colors";
+import { fonts } from "../styles/defaultStyles";
 
 export default function EmailSignInScreen({ navigation }) {
   const { signInWithEmail } = useAuthContext();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
     const trimmed = email.trim();
     if (!trimmed) {
-      Alert.alert('Email required', 'Please enter your email address.');
+      Alert.alert("Email required", "Please enter your email address.");
       return;
     }
     setLoading(true);
     try {
       await signInWithEmail(trimmed);
-      navigation.navigate('MagicLinkSent', { email: trimmed });
+      navigation.navigate("MagicLinkSent", { email: trimmed });
     } catch (err) {
-      const isRateLimited = err.status === 429 || /rate limit/i.test(err.message || '');
+      const isRateLimited =
+        err.status === 429 || /rate limit/i.test(err.message || "");
       Alert.alert(
-        isRateLimited ? 'Too Many Attempts' : 'Error',
+        isRateLimited ? "Too Many Attempts" : "Error",
         isRateLimited
           ? "You've requested too many sign-in links recently. Please wait a few minutes and try again."
-          : err.message || 'Failed to send magic link. Please try again.'
+          : err.message || "Failed to send magic link. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -44,18 +45,25 @@ export default function EmailSignInScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={[colors.lightGreen, colors.white]} style={styles.container}>
+    <LinearGradient
+      colors={[colors.lightGreen, colors.white]}
+      style={styles.container}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.inner}
       >
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
 
         <Text style={styles.title}>Sign in with Email</Text>
         <Text style={styles.description}>
-          Enter your email and we'll send you a link to sign in. This is to verify you are a real person.
+          Enter your email and we'll send you a link to sign in. This is to
+          verify you are a real person.
         </Text>
 
         <TextInput
@@ -92,7 +100,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   inner: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 30,
   },
   backButton: { marginBottom: 30 },
@@ -103,7 +111,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.black,
     marginBottom: 12,
     fontFamily: fonts.bold,
@@ -131,13 +139,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGreen,
     paddingVertical: 15,
     borderRadius: 25,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: fonts.bold,
   },
 });

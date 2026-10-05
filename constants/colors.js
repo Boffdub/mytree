@@ -5,24 +5,24 @@
 
 export const colors = {
   // Primary brand greens
-  primaryGreen: '#0B6B2A',
-  lightGreen: '#CEE7CF',
-  lightGreenTransparent: 'rgba(206, 231, 207, 0.6)', // e.g. TreeScreen header
+  primaryGreen: "#0B6B2A",
+  lightGreen: "#CEE7CF",
+  lightGreenTransparent: "rgba(206, 231, 207, 0.6)", // e.g. TreeScreen header
 
   // Neutrals
-  white: '#FFFFFF',
-  black: '#000000',
-  gray: '#666666',
-  grayLight: '#D9D9D9',
+  white: "#FFFFFF",
+  black: "#000000",
+  gray: "#666666",
+  grayLight: "#D9D9D9",
 
   // Semantic (correct / incorrect)
-  primaryRed: '#D30707',
-  lightRed: '#FCB5B5',
+  primaryRed: "#D30707",
+  lightRed: "#FCB5B5",
 
   // Tree visualization (TreeComponent)
-  treeTrunk: '#0B6B2A',
-  treeGround: '#7A2323',
+  treeTrunk: "#0B6B2A",
+  treeGround: "#7A2323",
 
   // Celebration (sparkles on full tree)
-  sparkleYellow: '#FFD700',
+  sparkleYellow: "#FFD700",
 };
