@@ -12,7 +12,7 @@ You agree to use MyTree only for its intended purpose — playing the quiz, lear
 
 ## Accounts
 
-If you create an account, you're responsible for keeping access to it secure (for email accounts, that means whatever email inbox you sign in with). MyTree is not directed at children under 13; see our [Privacy Policy](privacy.html) for details.
+If you create an account, you're responsible for keeping access to it secure (for email accounts, that means whatever email inbox you sign in with). MyTree is not directed at children under 16; see our [Privacy Policy](privacy.html) for details.
 
 You can delete your account and its data at any time from **Settings → Delete Account** in the app.
 

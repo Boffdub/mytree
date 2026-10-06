@@ -50,10 +50,7 @@ export default function SettingsScreen({ navigation }) {
           );
         }
 
-        const { error } = await supabase
-          .from("profiles")
-          .delete()
-          .eq("id", user.id);
+        const { error } = await supabase.rpc("delete_my_account");
         if (error) throw error;
         await signOut();
         navigation.reset({ index: 0, routes: [{ name: "Onboarding" }] });

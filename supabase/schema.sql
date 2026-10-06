@@ -161,3 +161,17 @@ CREATE TRIGGER on_auth_user_created
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS difficulty TEXT;
 
+
+-- Delete the signed-in user's login record. Removing the auth user cascades to
+-- profiles, game_sessions, question_attempts, and feedback.
+CREATE OR REPLACE FUNCTION public.delete_my_account()
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  DELETE FROM auth.users WHERE id = auth.uid();
+$$;
+
+REVOKE ALL ON FUNCTION public.delete_my_account() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.delete_my_account() TO authenticated;

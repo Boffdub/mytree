@@ -7,6 +7,8 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthContext } from "../context/AuthContext";
@@ -55,6 +57,11 @@ export default function WelcomeScreen({ navigation }) {
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const openLegal = (url, title) => {
+    if (Platform.OS === "web") Linking.openURL(url);
+    else navigation.navigate("WebView", { url, title });
   };
 
   const onEmailSignIn = () => {
@@ -121,6 +128,24 @@ export default function WelcomeScreen({ navigation }) {
         <TouchableOpacity style={styles.emailButton} onPress={onEmailSignIn}>
           <Text style={styles.emailButtonText}>Sign in with Email</Text>
         </TouchableOpacity>
+
+        <Text style={styles.legalText}>
+          By signing in you agree to our{" "}
+          <Text
+            style={styles.legalLink}
+            onPress={() => openLegal("https://boffdub.github.io/mytree/privacy.html", "Privacy Policy")}
+          >
+            Privacy Policy
+          </Text>{" "}
+          and{" "}
+          <Text
+            style={styles.legalLink}
+            onPress={() => openLegal("https://boffdub.github.io/mytree/terms.html", "Terms of Service")}
+          >
+            Terms
+          </Text>
+          .
+        </Text>
 
         {__DEV__ && (
           <TouchableOpacity
@@ -226,5 +251,16 @@ const styles = StyleSheet.create({
     color: colors.gray,
     fontSize: 14,
     fontFamily: fonts.semiBold,
+  },
+  legalText: {
+    color: colors.gray,
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    textAlign: "center",
+    marginTop: 16,
+  },
+  legalLink: {
+    color: colors.primaryGreen,
+    textDecorationLine: "underline",
   },
 });
