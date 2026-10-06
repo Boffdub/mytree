@@ -127,6 +127,18 @@ export default function ProfileScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.button}
+        onPress={() => navigation.navigate("Difficulty", { fromProfile: true })}
+      >
+        <Image
+          source={require("../assets/vectors/Difficulty_Icon.png")}
+          style={styles.buttonIcon}
+          resizeMode="contain"
+        />
+        <Text style={styles.buttonText}>Set Difficulty</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => navigation.navigate("Settings")}
       >
         <Image

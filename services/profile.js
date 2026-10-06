@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 export async function getProfile(userId) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("first_name, last_name, avatar_url")
+    .select("first_name, last_name, avatar_url, difficulty")
     .eq("id", userId)
     .single();
   if (error) throw error;
@@ -12,6 +12,7 @@ export async function getProfile(userId) {
     firstName: data.first_name,
     lastName: data.last_name,
     avatarUrl: data.avatar_url,
+    difficulty: data.difficulty,
   };
 }
 
@@ -36,6 +37,14 @@ export async function updateProfile(
   const { error } = await supabase
     .from("profiles")
     .update(updates)
+    .eq("id", userId);
+  if (error) throw error;
+}
+
+export async function updateDifficulty(userId, difficulty) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ difficulty })
     .eq("id", userId);
   if (error) throw error;
 }

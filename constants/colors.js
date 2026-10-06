@@ -19,6 +19,9 @@ export const colors = {
   primaryRed: "#D30707",
   lightRed: "#FCB5B5",
 
+  // Selected Color
+  selectedYellow: "#FFC400",
+
   // Tree visualization (TreeComponent)
   treeTrunk: "#0B6B2A",
   treeGround: "#7A2323",

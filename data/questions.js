@@ -358,3 +358,15 @@ export const getTotalQuestionCount = () => {
 export const getQuestionCountByCategory = (category) => {
   return questions[category] ? questions[category].length : 0;
 };
+
+export const getShuffledQuestionsByDifficulty = (difficulty) => {
+  const pool = Object.values(questions)
+    .flat()
+    .filter((q) => q.difficulty === difficulty);
+  // Fisher-Yates shuffle: swap each item with a random earlier one
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+};

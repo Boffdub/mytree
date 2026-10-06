@@ -17,7 +17,7 @@ export default function AnswerScreen({ navigation, route }) {
   const {
     question,
     selectedAnswer,
-    category,
+    difficulty,
     questions,
     questionIndex,
     scoreAlreadyUpdated,
@@ -52,7 +52,7 @@ export default function AnswerScreen({ navigation, route }) {
 
   useEffect(() => {
     const questionKey = question
-      ? `${category}-${question.id}-${questionIndex}`
+      ? `${difficulty}-${question.id}-${questionIndex}`
       : null;
 
     if (
@@ -63,19 +63,13 @@ export default function AnswerScreen({ navigation, route }) {
     ) {
       scoredQuestionsRef.current.add(questionKey);
 
-      const categoryKey =
-        category === "Energy"
-          ? "energy"
-          : category === "Transportation"
-            ? "transportation"
-            : category === "Food & Agriculture"
-              ? "foodAgriculture"
-              : category === "Carbon Removal"
-                ? "carbonRemoval"
-                : category;
-
       const persist = async () => {
-        await saveAnswer(categoryKey, question.id, selectedAnswer, isCorrect);
+        await saveAnswer(
+          question.category,
+          question.id,
+          selectedAnswer,
+          isCorrect,
+        );
         if (!scoreAlreadyUpdated) {
           if (isCorrect) {
             await incrementScore();
@@ -94,7 +88,7 @@ export default function AnswerScreen({ navigation, route }) {
   }, [
     question?.id,
     questionIndex,
-    category,
+    difficulty,
     selectedAnswer,
     isCorrect,
     incrementScore,
@@ -110,7 +104,7 @@ export default function AnswerScreen({ navigation, route }) {
       {/* Green Header */}
       <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{category || "Answer"}</Text>
+          <Text style={styles.headerTitle}>{difficulty || "Answer"}</Text>
         </View>
       </View>
 
@@ -231,7 +225,8 @@ export default function AnswerScreen({ navigation, route }) {
                     style={styles.nextButton}
                     onPress={() => {
                       navigation.navigate("Question", {
-                        category: category,
+                        difficulty: difficulty,
+                        questions: questions,
                         questionIndex: nextQuestionIndex,
                       });
                     }}
@@ -242,12 +237,8 @@ export default function AnswerScreen({ navigation, route }) {
                   <>
                     <TouchableOpacity
                       style={styles.viewTreeButton}
-                      onPress={() => navigation.navigate("Category")}
-                    >
-                      <Text style={styles.viewTreeButtonText}>
-                        ← Back to Category
-                      </Text>
-                    </TouchableOpacity>
+                      onPress={() => navigation.navigate("Question")}
+                    ></TouchableOpacity>
                     <TouchableOpacity
                       style={styles.viewTreeButton}
                       onPress={() => navigation.navigate("Home")}

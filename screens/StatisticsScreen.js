@@ -341,7 +341,7 @@ export default function StatisticsScreen({ navigation }) {
 
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => navigation.navigate("Category")}
+          onPress={() => navigation.navigate("Difficulty")}
         >
           <Text style={styles.primaryButtonText}>Continue Learning</Text>
         </TouchableOpacity>

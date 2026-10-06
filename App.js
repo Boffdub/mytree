@@ -1,38 +1,43 @@
-import React, { useEffect } from 'react';
-import { Platform, useWindowDimensions, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useFonts } from 'expo-font';
-import { colors } from './constants/colors';
-import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect } from "react";
+import {
+  Platform,
+  useWindowDimensions,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+import { colors } from "./constants/colors";
+import * as SplashScreen from "expo-splash-screen";
 import {
   Montserrat_400Regular,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
-} from '@expo-google-fonts/montserrat';
-import { AuthProvider, useAuthContext } from './context/AuthContext';
-import { GameProvider } from './context/GameContext';
-import OnboardingScreen from './screens/OnboardingScreen';
-import WelcomeScreen from './screens/WelcomeScreen';
-import EmailSignInScreen from './screens/EmailSignInScreen';
-import MagicLinkSentScreen from './screens/MagicLinkSentScreen';
-import HomeScreen from './screens/HomeScreen';
-import CategoryScreen from './screens/CategoryScreen';
-import QuestionScreen from './screens/QuestionScreen';
-import AnswerScreen from './screens/AnswerScreen';
-import TreeAnimationScreen from './screens/TreeAnimationScreen';
-import TreeScreen from './screens/TreeScreen';
-import SettingsScreen from './screens/SettingsScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import StatisticsScreen from './screens/StatisticsScreen';
-import EditProfileScreen from './screens/EditProfileScreen';
-import AboutScreen from './screens/AboutScreen';
-import NotificationsScreen from './screens/NotificationsScreen';
-import HowToPlay from './screens/HowToPlayScreen'; 
-import ContactUsScreen from './screens/ContactUsScreen';
-import WebViewScreen from './screens/WebViewScreen';
-
+} from "@expo-google-fonts/montserrat";
+import { AuthProvider, useAuthContext } from "./context/AuthContext";
+import { GameProvider } from "./context/GameContext";
+import OnboardingScreen from "./screens/OnboardingScreen";
+import WelcomeScreen from "./screens/WelcomeScreen";
+import EmailSignInScreen from "./screens/EmailSignInScreen";
+import MagicLinkSentScreen from "./screens/MagicLinkSentScreen";
+import HomeScreen from "./screens/HomeScreen";
+import QuestionScreen from "./screens/QuestionScreen";
+import AnswerScreen from "./screens/AnswerScreen";
+import TreeAnimationScreen from "./screens/TreeAnimationScreen";
+import TreeScreen from "./screens/TreeScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+import ProfileScreen from "./screens/ProfileScreen";
+import StatisticsScreen from "./screens/StatisticsScreen";
+import EditProfileScreen from "./screens/EditProfileScreen";
+import AboutScreen from "./screens/AboutScreen";
+import NotificationsScreen from "./screens/NotificationsScreen";
+import HowToPlay from "./screens/HowToPlayScreen";
+import ContactUsScreen from "./screens/ContactUsScreen";
+import WebViewScreen from "./screens/WebViewScreen";
+import DifficultyScreen from "./screens/DifficultyScreen";
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
@@ -40,7 +45,7 @@ const Stack = createStackNavigator();
 function AppNavigator() {
   const { mode } = useAuthContext();
 
-  if (mode === 'loading') {
+  if (mode === "loading") {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primaryGreen} />
@@ -50,7 +55,7 @@ function AppNavigator() {
 
   // First-time/logged-out visitors (mode === 'welcome') see the onboarding carousel first.
   // Returning signed-in users skip straight to Home.
-  const initialRoute = mode === 'welcome' ? 'Onboarding' : 'Home';
+  const initialRoute = mode === "welcome" ? "Onboarding" : "Home";
 
   return (
     <NavigationContainer>
@@ -63,7 +68,7 @@ function AppNavigator() {
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="MagicLinkSent" component={MagicLinkSentScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Category" component={CategoryScreen} />
+        <Stack.Screen name="Difficulty" component={DifficultyScreen} />
         <Stack.Screen name="Question" component={QuestionScreen} />
         <Stack.Screen name="TreeAnimation" component={TreeAnimationScreen} />
         <Stack.Screen name="Answer" component={AnswerScreen} />
@@ -74,7 +79,10 @@ function AppNavigator() {
         <Stack.Screen
           name="EditProfile"
           component={EditProfileScreen}
-          options={{ presentation: 'transparentModal', detachPreviousScreen: false }}
+          options={{
+            presentation: "transparentModal",
+            detachPreviousScreen: false,
+          }}
         />
         <Stack.Screen name="About" component={AboutScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
@@ -88,12 +96,12 @@ function AppNavigator() {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'Montserrat-Regular': Montserrat_400Regular,
-    'Montserrat-SemiBold': Montserrat_600SemiBold,
-    'Montserrat-Bold': Montserrat_700Bold,
+    "Montserrat-Regular": Montserrat_400Regular,
+    "Montserrat-SemiBold": Montserrat_600SemiBold,
+    "Montserrat-Bold": Montserrat_700Bold,
   });
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web';
+  const isWeb = Platform.OS === "web";
   const isWide = isWeb && width > 400;
 
   useEffect(() => {
@@ -121,13 +129,13 @@ export default function App() {
 
 const styles = StyleSheet.create({
   appOuter: { flex: 1 },
-  appOuterWide: { alignItems: 'center', backgroundColor: '#f5f5f5' },
-  appInner: { flex: 1, width: '100%' },
+  appOuterWide: { alignItems: "center", backgroundColor: "#f5f5f5" },
+  appInner: { flex: 1, width: "100%" },
   appInnerWide: { maxWidth: 420 },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.white,
   },
 });

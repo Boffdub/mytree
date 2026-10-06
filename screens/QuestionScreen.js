@@ -3,30 +3,18 @@ import { useGameContext } from "../context/GameContext";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
-import { getQuestionsByCategory } from "../data/questions";
+import { getShuffledQuestionsByDifficulty } from "../data/questions";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
 
-// Mapping function outside, before the component
-const mapCategoryToKey = (displayName) => {
-  // your mapping logic here
-  const categoryMap = {
-    Energy: "energy",
-    Transportation: "transportation",
-    "Food & Agriculture": "foodAgriculture",
-    "Carbon Removal": "carbonRemoval",
-  };
-  return categoryMap[displayName] || displayName;
-};
-
 export default function QuestionScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const { category } = route.params || { category: "General" };
+  const difficulty = route.params?.difficulty ?? "Easy";
 
   // State for the current question (the question object you're showing)
   const [currentQuestion, setCurrentQuestion] = useState(null);
 
-  // State for all questions in this category
+  // State for all questions in this quiz
   const [questions, setQuestions] = useState([]);
 
   // State for which answer the user selected (0, 1, 2, or 3, or null if nothing selected)
@@ -43,26 +31,27 @@ export default function QuestionScreen({ navigation, route }) {
   const { score, startSession, currentSessionId } = useGameContext();
 
   useEffect(() => {
-    const categoryKey = mapCategoryToKey(category);
-    const categoryQuestions = getQuestionsByCategory(categoryKey);
-    setQuestions(categoryQuestions);
-
     const indexFromRoute = route.params?.questionIndex ?? 0;
+    // Build the shuffled list once; later screens pass it along
+    const pool =
+      route.params?.questions ?? getShuffledQuestionsByDifficulty(difficulty);
+    setQuestions(pool);
     setQuestionIndex(indexFromRoute);
 
-    if (
-      categoryQuestions.length > 0 &&
-      indexFromRoute < categoryQuestions.length
-    ) {
-      setCurrentQuestion(categoryQuestions[indexFromRoute]);
+    if (pool.length > 0 && indexFromRoute < pool.length) {
+      setCurrentQuestion(pool[indexFromRoute]);
       setSelectedAnswer(null);
+    }
+
+    if (indexFromRoute === 0 && !currentSessionId) {
+      startSession(difficulty);
     }
 
     // Start a new session when entering the first question (index 0)
     if (indexFromRoute === 0 && !currentSessionId) {
-      startSession(categoryKey);
+      startSession(difficulty);
     }
-  }, [category, route.params?.questionIndex]);
+  }, [difficulty, route.params?.questionIndex]);
 
   useEffect(() => {
     if (currentSessionId) {
@@ -71,7 +60,7 @@ export default function QuestionScreen({ navigation, route }) {
     }
     const timer = setTimeout(() => setSessionTimedOut(true), 4000);
     return () => clearTimeout(timer);
-  }, [currentSessionId, category, route.params?.questionIndex]);
+  }, [currentSessionId, difficulty, route.params?.questionIndex]);
 
   return (
     <View style={styles.screenContainer}>
@@ -83,7 +72,7 @@ export default function QuestionScreen({ navigation, route }) {
           >
             <Text style={styles.homeButtonText}>🏠</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{category}</Text>
+          <Text style={styles.headerTitle}>{difficulty}</Text>
           <View style={styles.placeholder} />
         </View>
       </View>
@@ -131,7 +120,7 @@ export default function QuestionScreen({ navigation, route }) {
                     isCorrect: selectedAnswer === currentQuestion.correct,
                     question: currentQuestion,
                     selectedAnswer: selectedAnswer,
-                    category: category,
+                    difficulty: difficulty,
                     questions: questions,
                     questionIndex: questionIndex,
                   });
