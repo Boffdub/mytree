@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,6 +11,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGameContext } from "../context/GameContext";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuthContext } from "../context/AuthContext";
+import { StorageService } from "../services/storage";
+import { calculateStreak } from "../utils/streak";
 
 export default function AnswerScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -22,8 +26,18 @@ export default function AnswerScreen({ navigation, route }) {
     questionIndex,
     scoreAlreadyUpdated,
   } = route.params || {};
-  const { score, incrementScore, decrementScore, saveAnswer, completeSession } =
-    useGameContext();
+  const {
+    score,
+    incrementScore,
+    decrementScore,
+    saveAnswer,
+    completeSession,
+    correctStreak,
+  } = useGameContext();
+
+  const auth = useAuthContext();
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [dayStreak, setDayStreak] = useState(0);
 
   // Track which questions we've already scored to prevent double-counting
   const scoredQuestionsRef = useRef(new Set());
@@ -35,11 +49,6 @@ export default function AnswerScreen({ navigation, route }) {
   const hasNextQuestion =
     questions && questionIndex !== null && questionIndex + 1 < questions.length;
   const nextQuestionIndex = hasNextQuestion ? questionIndex + 1 : null;
-  // calculate progress
-  const currentQuestionNumber = questionIndex != null ? questionIndex + 1 : 1;
-  const totalQuestions = questions ? questions.length : 1;
-  const progressPercentage =
-    totalQuestions > 0 ? (currentQuestionNumber / totalQuestions) * 100 : 0;
   // Get answer texts
   const selectedAnswerText =
     question && selectedAnswer !== null
@@ -98,71 +107,80 @@ export default function AnswerScreen({ navigation, route }) {
     completeSession,
     hasNextQuestion,
   ]);
+  useEffect(() => {
+    if (!auth.user?.id) return;
+    const storage = new StorageService(auth);
+    storage
+      .getAnsweredQuestions()
+      .then((attempts) => {
+        setDayStreak(calculateStreak(attempts.map((a) => a.answeredAt)));
+      })
+      .catch(() => {});
+  }, [auth.user?.id, question?.id, questionIndex]);
 
   return (
-    <View style={styles.screenContainer}>
-      {/* Green Header */}
-      <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{difficulty || "Answer"}</Text>
-        </View>
-      </View>
+    <LinearGradient
+      colors={[colors.lightGreen, colors.white]}
+      style={styles.screenContainer}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingTop: insets.top + 20 },
+        ]}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
+          {question ? (
+            <>
+              {/* Result Banner */}
+              <View
+                style={[
+                  styles.resultBanner,
+                  isCorrect ? styles.correctBanner : styles.incorrectBanner,
+                ]}
+              >
+                <Text style={styles.resultText}>
+                  {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
+                </Text>
+              </View>
 
-      {/* White Body */}
-      <View style={styles.bodyContainer}>
-        {/* Progress Indicator */}
-        <View style={styles.progressContainer}>
-          {/* Top Row: Question text and Score bad */}
-          <View style={styles.progressTopRow}>
-            <Text style={styles.progressText}>
-              Question {currentQuestionNumber} of {totalQuestions}
-            </Text>
-            <View style={styles.scoreBadge}>
-              <Text style={styles.scoreText}>Score: {score}</Text>
-            </View>
-          </View>
+              {/* Question Text */}
+              <Text style={styles.questionText}>{question.question}</Text>
 
-          {/* Bottom row: Progress bar (full width) */}
-          <View style={styles.progressBarContainer}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPercentage}%` },
-              ]}
-            />
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={true}
-          bounces={true}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.card}>
-            {question ? (
-              <>
-                {/* Result Banner */}
-                <View
-                  style={[
-                    styles.resultBanner,
-                    isCorrect ? styles.correctBanner : styles.incorrectBanner,
-                  ]}
-                >
-                  <Text style={styles.resultText}>
-                    {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-                  </Text>
-                </View>
-
-                {/* Question Text */}
-                <Text style={styles.questionText}>{question.question}</Text>
-
-                {/* Answer Display */}
-                {question && selectedAnswerText && correctAnswerText && (
-                  <View style={styles.answerDisplayContainer}>
-                    {isCorrect ? (
-                      // If correct, show answer once in green
+              {/* Answer Display */}
+              {question && selectedAnswerText && correctAnswerText && (
+                <View style={styles.answerDisplayContainer}>
+                  {isCorrect ? (
+                    // If correct, show answer once in green
+                    <View style={[styles.answerBox, styles.correctAnswerBox]}>
+                      <View style={styles.answerLetterCircle}>
+                        <Text style={styles.answerLetterText}>
+                          {String.fromCharCode(65 + correctAnswerIndex)}
+                        </Text>
+                      </View>
+                      <Text style={styles.correctAnswerText}>
+                        {correctAnswerText}
+                      </Text>
+                    </View>
+                  ) : (
+                    // If incorrect, show both answers
+                    <>
+                      <View
+                        style={[styles.answerBox, styles.incorrectAnswerBox]}
+                      >
+                        <View style={styles.answerLetterCircleIncorrect}>
+                          <Text style={styles.answerLetterTextIncorrect}>
+                            {String.fromCharCode(65 + selectedAnswer)}
+                          </Text>
+                        </View>
+                        <Text style={styles.incorrectAnswerText}>
+                          Your Answer: {selectedAnswerText}
+                        </Text>
+                      </View>
                       <View style={[styles.answerBox, styles.correctAnswerBox]}>
                         <View style={styles.answerLetterCircle}>
                           <Text style={styles.answerLetterText}>
@@ -170,186 +188,102 @@ export default function AnswerScreen({ navigation, route }) {
                           </Text>
                         </View>
                         <Text style={styles.correctAnswerText}>
-                          {correctAnswerText}
+                          Correct Answer: {correctAnswerText}
                         </Text>
                       </View>
-                    ) : (
-                      // If incorrect, show both answers
-                      <>
-                        <View
-                          style={[styles.answerBox, styles.incorrectAnswerBox]}
-                        >
-                          <View style={styles.answerLetterCircleIncorrect}>
-                            <Text style={styles.answerLetterTextIncorrect}>
-                              {String.fromCharCode(65 + selectedAnswer)}
-                            </Text>
-                          </View>
-                          <Text style={styles.incorrectAnswerText}>
-                            Your Answer: {selectedAnswerText}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.answerBox, styles.correctAnswerBox]}
-                        >
-                          <View style={styles.answerLetterCircle}>
-                            <Text style={styles.answerLetterText}>
-                              {String.fromCharCode(65 + correctAnswerIndex)}
-                            </Text>
-                          </View>
-                          <Text style={styles.correctAnswerText}>
-                            Correct Answer: {correctAnswerText}
-                          </Text>
-                        </View>
-                      </>
-                    )}
-                  </View>
-                )}
-
-                {/* Infographic Placeholder */}
-                <View style={styles.infographicPlaceholder}>
-                  <Text style={styles.infographicText}>Infographic</Text>
+                    </>
+                  )}
                 </View>
+              )}
 
-                {/* Explanation */}
-                <Text style={styles.explanationTitle}>Explanation:</Text>
-                <Text style={styles.explanationText}>
-                  {question.explanation}
-                </Text>
+              {/* Infographic Placeholder */}
+              <View style={styles.infographicPlaceholder}>
+                <Text style={styles.infographicText}>Visual</Text>
+              </View>
 
-                {/* Source */}
+              <TouchableOpacity
+                onPress={() => {
+                  if (question.sourceUrl) Linking.openURL(question.sourceUrl);
+                }}
+              >
                 <Text style={styles.sourceText}>Source: {question.source}</Text>
+              </TouchableOpacity>
 
-                {/* Navigation Buttons */}
-                {hasNextQuestion ? (
-                  <TouchableOpacity
-                    style={styles.nextButton}
-                    onPress={() => {
-                      navigation.navigate("Question", {
-                        difficulty: difficulty,
-                        questions: questions,
-                        questionIndex: nextQuestionIndex,
-                      });
-                    }}
-                  >
-                    <Text style={styles.nextButtonText}>Next Question →</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      style={styles.viewTreeButton}
-                      onPress={() => navigation.navigate("Question")}
-                    ></TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.viewTreeButton}
-                      onPress={() => navigation.navigate("Home")}
-                    >
-                      <Text style={styles.viewTreeButtonText}>🏠 Home</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+              {/* Explanation */}
+              <TouchableOpacity
+                style={styles.explanationToggle}
+                onPress={() => setShowExplanation(!showExplanation)}
+              >
+                <Text style={styles.explanationToggleText}>
+                  Why is this the answer?
+                </Text>
+                <Text style={styles.explanationToggleArrow}>
+                  {showExplanation ? "▲" : "▼"}
+                </Text>
+              </TouchableOpacity>
+              {showExplanation && (
+                <>
+                  <Text style={styles.explanationText}>
+                    {question.question}
+                  </Text>
+                  <Text style={styles.explanationText}>
+                    {question.explanation}
+                  </Text>
+                </>
+              )}
 
-                {/* Source Button */}
+              <View style={styles.statRow}>
+                <View style={styles.statColumn}>
+                  <Text style={styles.statLabel}>Score</Text>
+                  <Text style={styles.statValue}>{score}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statColumn}>
+                  <Text style={styles.statLabel}>Streak</Text>
+                  <Text style={styles.statValue}>+{correctStreak}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statColumn}>
+                  <Text style={styles.statLabel}>Day Streak</Text>
+                  <Text style={styles.statValue}>{dayStreak}</Text>
+                </View>
+              </View>
+
+              {/* Navigation Buttons */}
+              {hasNextQuestion ? (
                 <TouchableOpacity
-                  style={styles.sourceButton}
+                  style={styles.nextButton}
                   onPress={() => {
-                    if (question && question.sourceUrl) {
-                      Linking.openURL(question.sourceUrl);
-                    }
+                    navigation.navigate("Question", {
+                      difficulty,
+                      questions,
+                      questionIndex: nextQuestionIndex,
+                    });
                   }}
                 >
-                  <Text style={styles.sourceButtonText}>Source</Text>
+                  <Text style={styles.nextButtonText}>Next Question →</Text>
                 </TouchableOpacity>
-
-                {/* View Tree Button */}
+              ) : (
                 <TouchableOpacity
-                  style={styles.viewTreeButton}
-                  onPress={() => navigation.navigate("Tree")}
+                  style={styles.nextButton}
+                  onPress={() => navigation.navigate("Home")}
                 >
-                  <Text style={styles.viewTreeButtonText}>🌲 View Tree</Text>
+                  <Text style={styles.nextButtonText}>🏠 Home</Text>
                 </TouchableOpacity>
-              </>
-            ) : (
-              <Text style={styles.loadingText}>No question data available</Text>
-            )}
-          </View>
-        </ScrollView>
-      </View>
-    </View>
+              )}
+            </>
+          ) : (
+            <Text style={styles.loadingText}>No question data available</Text>
+          )}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-  },
-  headerContainer: {
-    backgroundColor: colors.lightGreen,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-    color: colors.primaryGreen,
-    fontFamily: fonts.bold,
-  },
-  bodyContainer: {
-    flex: 1,
-    backgroundColor: colors.white,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    alignItems: "center",
-  },
-  progressContainer: {
-    width: "95%",
-    marginBottom: 15,
-  },
-  progressTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  progressText: {
-    fontSize: 14,
-    color: colors.black,
-    fontFamily: fonts.regular,
-  },
-  scoreBadge: {
-    backgroundColor: "#fff",
-    borderWidth: 2,
-    borderColor: "#1E8F2D",
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scoreText: {
-    color: colors.primaryGreen,
-    fontSize: 14,
-    fontWeight: "bold",
-    fontFamily: fonts.bold,
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: colors.grayLight,
-    borderRadius: 15,
-    overflow: "hidden",
-    width: "100%",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#1E8F2D",
-    borderRadius: 15,
   },
   scrollView: {
     flex: 1,
@@ -379,13 +313,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   correctBanner: {
-    backgroundColor: "#1E8F2D",
+    backgroundColor: colors.primaryGreen,
   },
   incorrectBanner: {
-    backgroundColor: "#F44336",
+    backgroundColor: colors.primaryRed,
   },
   resultText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 24,
     fontWeight: "bold",
     fontFamily: fonts.bold,
@@ -413,14 +347,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   correctAnswerBox: {
-    backgroundColor: "#CEE7CF",
-    borderColor: "#1E8F2D",
+    backgroundColor: colors.lightGreen,
+    borderColor: colors.primaryGreen,
   },
   answerLetterCircle: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#1E8F2D",
+    backgroundColor: colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -432,7 +366,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   correctAnswerText: {
-    color: "#1E8F2D",
+    color: colors.primaryGreen,
     fontSize: 16,
     fontWeight: "bold",
     flex: 1,
@@ -452,7 +386,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   answerLetterTextIncorrect: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 14,
     fontWeight: "bold",
     fontFamily: fonts.bold,
@@ -465,7 +399,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   infographicPlaceholder: {
-    backgroundColor: "#D9D9D9",
+    backgroundColor: colors.grayLight,
     width: "100%",
     height: 150,
     borderRadius: 10,
@@ -479,14 +413,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: fonts.semiBold,
   },
-  explanationTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1E8F2D",
-    marginBottom: 10,
-    marginTop: 10,
-    fontFamily: fonts.bold,
-  },
   explanationText: {
     fontSize: 16,
     color: colors.black,
@@ -495,9 +421,50 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontFamily: fonts.regular,
   },
+  explanationToggle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: colors.lightGreen,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 10,
+    width: "100%",
+  },
+  explanationToggleText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.black,
+  },
+  explanationToggleArrow: {
+    fontSize: 13,
+    color: colors.black,
+  },
+  statRow: {
+    flexDirection: "row",
+    backgroundColor: colors.lightGreen,
+    borderRadius: 15,
+    paddingVertical: 14,
+    marginBottom: 20,
+    width: "100%",
+  },
+  statColumn: { flex: 1, alignItems: "center" },
+  statDivider: { width: 1, backgroundColor: colors.white },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: fonts.bold,
+    color: colors.black,
+    marginBottom: 2,
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: colors.primaryGreen,
+  },
   sourceText: {
     fontSize: 14,
-    color: "#666",
+    color: colors.gray,
     fontStyle: "italic",
     marginBottom: 20,
     fontFamily: fonts.regular,
@@ -514,42 +481,9 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   nextButtonText: {
-    color: "#1E8F2D",
+    color: colors.primaryGreen,
     fontSize: 16,
     fontWeight: "bold",
-  },
-  sourceButton: {
-    backgroundColor: colors.lightGreen,
-    borderWidth: 2,
-    borderColor: colors.primaryGreen,
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginBottom: 15,
-    alignItems: "center",
-    width: "100%",
-  },
-  sourceButtonText: {
-    color: "#1E8F20",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  viewTreeButton: {
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primaryGreen,
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginBottom: 10,
-    alignItems: "center",
-    width: "100%",
-  },
-  viewTreeButtonText: {
-    color: "#1E8F2D",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: fonts.bold,
   },
   loadingText: {
     fontSize: 16,

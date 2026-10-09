@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
 import { useAuthContext } from "../context/AuthContext";
 import { getProfile, updateDifficulty } from "../services/profile";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DIFFICULTIES = [
   {
@@ -30,6 +38,7 @@ export default function DifficultyScreen({ navigation, route }) {
   const [selected, setSelected] = useState(null);
   const auth = useAuthContext();
   const fromProfile = route.params?.fromProfile ?? false;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!auth.user?.id) return;
@@ -55,53 +64,57 @@ export default function DifficultyScreen({ navigation, route }) {
       colors={[colors.lightGreen, colors.white]}
       style={styles.container}
     >
-      <View style={styles.topRow}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.topRow, { paddingTop: insets.top + 10 }]}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+            <Image
+              source={require("../assets/vectors/Profile.png")}
+              style={styles.profileIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <Image
+          source={require("../assets/image/My_Tree_Logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.title}>My Tree</Text>
+        <Text style={styles.question}>
+          {
+            "Since we're all at a different level of the climate journey:\n\nWhat is your difficulty level?"
+          }
+        </Text>
+
+        {DIFFICULTIES.map((d) => (
+          <TouchableOpacity
+            key={d.key}
+            style={[styles.option, selected === d.key && styles.optionSelected]}
+            onPress={() => setSelected(d.key)}
+          >
+            <Text style={styles.optionLabel}>{d.label}</Text>
+            <Text style={styles.optionDescription}>{d.description}</Text>
+          </TouchableOpacity>
+        ))}
+
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          style={[styles.submit, !selected && styles.submitDisabled]}
+          disabled={!selected}
+          onPress={handleSubmit}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.submitText}>
+            {fromProfile ? "Set" : "Submit"}
+          </Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
-          <Image
-            source={require("../assets/vectors/Profile.png")}
-            style={styles.profileIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
-
-      <Image
-        source={require("../assets/image/My_Tree_Logo.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-      <Text style={styles.title}>My Tree</Text>
-      <Text style={styles.question}>
-        {
-          "Since we're all at a different level of the climate journey:\n\nWhat is your difficulty level?"
-        }
-      </Text>
-
-      {DIFFICULTIES.map((d) => (
-        <TouchableOpacity
-          key={d.key}
-          style={[styles.option, selected === d.key && styles.optionSelected]}
-          onPress={() => setSelected(d.key)}
-        >
-          <Text style={styles.optionLabel}>{d.label}</Text>
-          <Text style={styles.optionDescription}>{d.description}</Text>
-        </TouchableOpacity>
-      ))}
-
-      <TouchableOpacity
-        style={[styles.submit, !selected && styles.submitDisabled]}
-        disabled={!selected}
-        onPress={handleSubmit}
-      >
-        <Text style={styles.submitText}>{fromProfile ? "Set" : "Submit"}</Text>
-      </TouchableOpacity>
+      </ScrollView>
     </LinearGradient>
   );
 }
@@ -109,9 +122,12 @@ export default function DifficultyScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    width: "100%",
+    padding: 20,
+    paddingBottom: 40,
   },
   topRow: {
     width: "100%",

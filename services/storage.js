@@ -6,18 +6,24 @@ export class StorageService {
   }
 
   async getScore() {
-    // score derived from correct question_attempts
-    const { data: attempts, error } = await supabase
-      .from("question_attempts")
-      .select("is_correct")
-      .eq("user_id", this.authState.user.id);
+    // current_tree_score is the live 0-5 value for the tree being grown right
+    // now - separate from lifetime stats like Statistics' "trees earned",
+    // which are derived from question_attempts directly.
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("current_tree_score")
+      .eq("id", this.authState.user.id)
+      .single();
     if (error) throw error;
-    const net = attempts.reduce((acc, a) => acc + (a.is_correct ? 1 : -1), 0);
-    return Math.max(0, Math.min(5, net));
+    return data.current_tree_score;
   }
 
   async updateScore(newScore) {
-    // score is derived from question_attempts; no direct update needed
+    const { error } = await supabase
+      .from("profiles")
+      .update({ current_tree_score: newScore })
+      .eq("id", this.authState.user.id);
+    if (error) throw error;
   }
 
   async startSession(category) {

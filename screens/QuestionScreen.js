@@ -1,11 +1,66 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { useGameContext } from "../context/GameContext";
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  Alert,
+  Platform,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState, useEffect } from "react";
 import { getShuffledQuestionsByDifficulty } from "../data/questions";
+import { CATEGORY_INFO } from "../constants/categories";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
+
+function showComingSoon(feature) {
+  const message = `${feature} is on the way in a future update`;
+  if (Platform.OS === "web") window.alert(message);
+  else Alert.alert("Coming Soon", message);
+}
+
+// Which lifelines show at each difficulty. Easy has no Shield and no tree
+// shrinking, so it has no Shield icon here either - see Difficulty screen.
+function lifelinesFor(difficulty) {
+  const base = [
+    {
+      key: "fiftyFifty",
+      label: "50/50",
+      icon: require("../assets/vectors/5050.png"),
+    },
+    {
+      key: "visualReveal",
+      label: "Visual Reveal",
+      icon: require("../assets/vectors/infographic.png"),
+    },
+  ];
+  if (difficulty === "Medium") {
+    return [
+      ...base,
+      {
+        key: "shield",
+        label: "Shield",
+        icon: require("../assets/vectors/shield.png"),
+        count: 3,
+      },
+    ];
+  }
+  if (difficulty === "Hard") {
+    return [
+      ...base,
+      {
+        key: "shield",
+        label: "Shield",
+        icon: require("../assets/vectors/shield.png"),
+        count: 1,
+      },
+    ];
+  }
+  return base;
+}
 
 export default function QuestionScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -29,6 +84,10 @@ export default function QuestionScreen({ navigation, route }) {
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
 
   const { score, startSession, currentSessionId } = useGameContext();
+  const category = currentQuestion
+    ? CATEGORY_INFO[currentQuestion.category]
+    : null;
+  const lifelines = lifelinesFor(difficulty);
 
   useEffect(() => {
     const indexFromRoute = route.params?.questionIndex ?? 0;
@@ -43,6 +102,7 @@ export default function QuestionScreen({ navigation, route }) {
       setSelectedAnswer(null);
     }
 
+    // Start a new session when entering the first question (index 0)
     if (indexFromRoute === 0 && !currentSessionId) {
       startSession(difficulty);
     }
@@ -63,23 +123,35 @@ export default function QuestionScreen({ navigation, route }) {
   }, [currentSessionId, difficulty, route.params?.questionIndex]);
 
   return (
-    <View style={styles.screenContainer}>
-      <View style={[styles.headerContainer, { paddingTop: insets.top + 15 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("Home")}
-            style={styles.homeButton}
-          >
-            <Text style={styles.homeButtonText}>🏠</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{difficulty}</Text>
-          <View style={styles.placeholder} />
-        </View>
+    <LinearGradient
+      colors={[colors.lightGreen, colors.white]}
+      style={styles.screenContainer}
+    >
+      <View style={[styles.topRow, { paddingTop: insets.top + 15 }]}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Home")}
+          style={styles.homeButton}
+        >
+          <Text style={styles.homeButtonText}>🏠</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.bodyContainer}>
         {currentQuestion ? (
           <>
+            {category && (
+              <View style={styles.categoryHeader}>
+                <View style={styles.categoryIconCircle}>
+                  <Image
+                    source={category.icon}
+                    style={styles.categoryIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.categoryLabel}>{category.label}</Text>
+              </View>
+            )}
+
             {/* Question Text */}
             <Text style={styles.questionText}>{currentQuestion.question}</Text>
 
@@ -89,18 +161,16 @@ export default function QuestionScreen({ navigation, route }) {
                 key={index}
                 style={[
                   styles.optionButton,
-                  selectedAnswer === index && styles.selectedOptionButton,
+                  selectedAnswer === index && styles.optionButtonSelected,
                 ]}
                 onPress={() => setSelectedAnswer(index)}
               >
-                <Text
-                  style={[
-                    styles.optionButtonText,
-                    selectedAnswer === index && styles.selectedOptionButtonText,
-                  ]}
-                >
-                  {option}
-                </Text>
+                <View style={styles.optionLetterCircle}>
+                  <Text style={styles.optionLetterText}>
+                    {String.fromCharCode(65 + index)}
+                  </Text>
+                </View>
+                <Text style={styles.optionButtonText}>{option}</Text>
               </TouchableOpacity>
             ))}
 
@@ -119,7 +189,7 @@ export default function QuestionScreen({ navigation, route }) {
                     fromScore: score,
                     isCorrect: selectedAnswer === currentQuestion.correct,
                     question: currentQuestion,
-                    selectedAnswer: selectedAnswer,
+                    selectedAnswer,
                     difficulty: difficulty,
                     questions: questions,
                     questionIndex: questionIndex,
@@ -129,12 +199,40 @@ export default function QuestionScreen({ navigation, route }) {
                 <Text style={styles.submitButtonText}>Submit Answer</Text>
               </TouchableOpacity>
             )}
+
+            {/* Lifelines - icons only for now, tapping shows a stub until they're built */}
+            <View style={styles.lifelineRow}>
+              {lifelines.map((lifeline) => (
+                <TouchableOpacity
+                  key={lifeline.key}
+                  style={styles.lifelineButton}
+                  onPress={() => showComingSoon(lifeline.label)}
+                >
+                  <Image
+                    source={lifeline.icon}
+                    style={styles.lifelineIcon}
+                    resizeMode="contain"
+                  />
+                  {lifeline.count != null && (
+                    <View style={styles.lifelineBadge}>
+                      <Text style={styles.lifelineBadgeText}>
+                        {lifeline.count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.scoreBadge}>
+              <Text style={styles.scoreBadgeText}>Score: {score}</Text>
+            </View>
           </>
         ) : (
           <Text style={styles.loadingText}>Loading question...</Text>
         )}
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -144,87 +242,102 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Green gradient header area
-  headerContainer: {
-    backgroundColor: colors.lightGreen,
+  topRow: {
+    flexDirection: "row",
     paddingHorizontal: 20,
-    paddingBottom: 15,
-  },
-
-  // Header row with back button, title, placeholder
-  header: {
-    flexDirection: "row", // Lay out children horizontally
-    alignItems: "center", // Center vertically
-    justifyContent: "space-between", // Spread items apart
-    width: "100%",
-  },
-
-  // Category title in header
-  headerTitle: {
-    fontSize: 20,
-    flex: 1,
-    textAlign: "center",
-    fontWeight: "bold",
-    color: "#1E8F2D",
-    fontFamily: fonts.bold,
-  },
-
-  // Empty view to balance the back button (centers the title)
-  placeholder: {
-    width: 40,
+    paddingBottom: 10,
   },
   homeButton: {
     width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
   homeButtonText: {
     fontSize: 22,
   },
-
   // White/light body area
   bodyContainer: {
     backgroundColor: colors.white,
-    flex: 1, // Takes remaining space
-    paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginVertical: 10,
+    marginHorizontal: 20,
+    borderColor: colors.grayLight,
+    boxShadow: "0px 5px 5px rgba(0, 0, 0, 0.25)",
+    borderStyle: "solid",
+    borderWidth: 5,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  categoryHeader: {
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  categoryIconCircle: {
+    width: 50,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  categoryIcon: {
+    width: 35,
+    height: 35,
+  },
+  categoryLabel: {
+    fontSize: 13,
+    fontFamily: fonts.regular,
+    color: colors.black,
+    lineHeight: 13,
   },
 
   // Question text
   questionText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#1E8F2D",
-    marginBottom: 25,
-    lineHeight: 30,
+    color: colors.primaryGreen,
+    marginBottom: 20,
+    lineHeight: 27,
     fontFamily: fonts.bold,
   },
-
   // Answer option buttons
   optionButton: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primaryGreen,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: colors.grayLight,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 30,
     marginBottom: 12,
     width: "100%",
-    alignItems: "center",
   },
-  selectedOptionButton: {
-    backgroundColor: "#CEE7CF",
-    borderColor: "#1E8F2D",
+  optionButtonSelected: {
+    borderColor: colors.selectedYellow,
+    borderWidth: 2,
+  },
+  optionLetterCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.grayLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  optionLetterText: {
+    color: colors.black,
+    fontSize: 15,
+    fontFamily: fonts.bold,
   },
   optionButtonText: {
-    color: "#1E8F2D",
+    color: colors.black,
     fontSize: 16,
-    fontWeight: "500",
-    fontFamily: fonts.semiBold,
-  },
-  selectedOptionButtonText: {
-    color: colors.primaryGreen,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
+    flexShrink: 1,
   },
 
   submitButton: {
@@ -232,12 +345,13 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 25,
-    marginTop: 20,
+    marginTop: 10,
     alignItems: "center",
     width: "100%",
   },
+
   submitButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: fonts.bold,
@@ -245,7 +359,52 @@ const styles = StyleSheet.create({
   submitButtonDisabled: {
     opacity: 0.5,
   },
+  lifelineRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 24,
+    marginTop: 20,
+  },
+  lifelineButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lifelineIcon: {
+    width: 40,
+    height: 40,
+  },
+  lifelineBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.primaryGreen,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lifelineBadgeText: {
+    color: colors.white,
+    fontSize: 11,
+    fontFamily: fonts.bold,
+  },
 
+  scoreBadge: {
+    alignSelf: "center",
+    borderWidth: 1.5,
+    borderColor: colors.primaryGreen,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginTop: 14,
+    marginBottom: 20,
+  },
+  scoreBadgeText: {
+    color: colors.primaryGreen,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
   // Loading state
   loadingText: {
     fontSize: 16,

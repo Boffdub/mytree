@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthContext } from "../context/AuthContext";
@@ -52,107 +59,120 @@ export default function ProfileScreen({ navigation }) {
       colors={[colors.lightGreen, colors.white]}
       style={styles.container}
     >
-      <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.header, { paddingTop: insets.top + 15 }]}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.avatar}>
+          {profile.avatarUrl ? (
+            <Image
+              source={{ uri: profile.avatarUrl }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.avatarPlaceholder}>👤</Text>
+          )}
+        </View>
+
+        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.email}>{auth.user?.email}</Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statPill}>
+            <Text style={styles.statNumber}>{stats.answered}</Text>
+            <Text style={styles.statLabel}>Questions{"\n"}Answered</Text>
+          </View>
+          <View style={styles.statPill}>
+            <Text style={styles.statNumber}>{stats.correct}</Text>
+            <Text style={styles.statLabel}>Correct</Text>
+          </View>
+          <View style={styles.statPill}>
+            <Text style={styles.statNumber}>{stats.streak}</Text>
+            <Text style={styles.statLabel}>Day{"\n"}Streak</Text>
+          </View>
+          <View style={styles.statPill}>
+            <Text style={styles.statNumber}>{percentAccurate}%</Text>
+            <Text style={styles.statLabel}>Percent{"\n"}Accurate</Text>
+          </View>
+        </View>
+
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          style={styles.button}
+          onPress={() => navigation.navigate("Statistics")}
         >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.avatar}>
-        {profile.avatarUrl ? (
           <Image
-            source={{ uri: profile.avatarUrl }}
-            style={styles.avatarImage}
-            resizeMode="cover"
+            source={require("../assets/vectors/Stats.png")}
+            style={styles.buttonIcon}
+            resizeMode="contain"
           />
-        ) : (
-          <Text style={styles.avatarPlaceholder}>👤</Text>
-        )}
-      </View>
+          <Text style={styles.buttonText}>View Full Statistics</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.name}>{displayName}</Text>
-      <Text style={styles.email}>{auth.user?.email}</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            navigation.navigate("EditProfile", {
+              firstName: profile.firstName,
+              lastName: profile.lastName,
+              avatarUrl: profile.avatarUrl,
+            })
+          }
+        >
+          <Image
+            source={require("../assets/vectors/Edit.png")}
+            style={styles.buttonIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.buttonText}>Edit Profile</Text>
+        </TouchableOpacity>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statPill}>
-          <Text style={styles.statNumber}>{stats.answered}</Text>
-          <Text style={styles.statLabel}>Questions{"\n"}Answered</Text>
-        </View>
-        <View style={styles.statPill}>
-          <Text style={styles.statNumber}>{stats.correct}</Text>
-          <Text style={styles.statLabel}>Correct</Text>
-        </View>
-        <View style={styles.statPill}>
-          <Text style={styles.statNumber}>{stats.streak}</Text>
-          <Text style={styles.statLabel}>Day{"\n"}Streak</Text>
-        </View>
-        <View style={styles.statPill}>
-          <Text style={styles.statNumber}>{percentAccurate}%</Text>
-          <Text style={styles.statLabel}>Percent{"\n"}Accurate</Text>
-        </View>
-      </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            navigation.navigate("Difficulty", { fromProfile: true })
+          }
+        >
+          <Image
+            source={require("../assets/vectors/Difficulty_Icon.png")}
+            style={styles.buttonIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.buttonText}>Set Difficulty</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Statistics")}
-      >
-        <Image
-          source={require("../assets/vectors/Stats.png")}
-          style={styles.buttonIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.buttonText}>View Full Statistics</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          navigation.navigate("EditProfile", {
-            firstName: profile.firstName,
-            lastName: profile.lastName,
-            avatarUrl: profile.avatarUrl,
-          })
-        }
-      >
-        <Image
-          source={require("../assets/vectors/Edit.png")}
-          style={styles.buttonIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.buttonText}>Edit Profile</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Difficulty", { fromProfile: true })}
-      >
-        <Image
-          source={require("../assets/vectors/Difficulty_Icon.png")}
-          style={styles.buttonIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.buttonText}>Set Difficulty</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Settings")}
-      >
-        <Image
-          source={require("../assets/vectors/Setting.png")}
-          style={styles.buttonIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.buttonText}>Settings</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Settings")}
+        >
+          <Image
+            source={require("../assets/vectors/Setting.png")}
+            style={styles.buttonIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.buttonText}>Settings</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    alignItems: "center",
+    width: "100%",
+    padding: 20,
+    paddingBottom: 40,
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -185,7 +205,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: fonts.bold,
   },
-  container: { flex: 1, alignItems: "center", padding: 20 },
   header: { width: "100%", flexDirection: "row", paddingBottom: 15 },
 
   avatar: {

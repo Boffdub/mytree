@@ -6,7 +6,11 @@ A climate trivia quiz app built with React Native and Expo. Answer questions abo
 
 MyTree helps users learn about climate change through interactive quizzes. As you answer questions correctly, you grow a virtual tree representing your learning journey. Sign in with Apple, Google, or email to track your progress and customize your profile with a name and photo.
 
-**Categories:** Energy · Transportation · Food & Agriculture · Carbon Removal
+**How it works:**
+- Pick a difficulty (Easy, Medium, or Hard) to start a quiz. Questions come from every category, in random order, with no repeats in a quiz.
+- Your difficulty is saved to your account and can be changed from your profile.
+- Statistics show your progress, your day streak, the trees you've earned, and a global leaderboard (week, month, or all time).
+- Lifelines and difficulty rules are being built for the beta.
 
 ## Technology Stack
 
@@ -16,8 +20,8 @@ MyTree helps users learn about climate change through interactive quizzes. As yo
 - **React Navigation** — screen routing
 - **Expo Linear Gradient** — UI components
 - **Expo Image Picker** / **Expo File System** — profile photo selection and upload
-- **React Native WebView** — in-app Privacy Policy / Terms of Service pages (native builds only — not supported on web)
-- **Resend** — sends an email notification (via a Supabase Database Webhook → Edge Function) whenever feedback is submitted through the app
+- **React Native WebView** — in-app Privacy Policy / Terms of Service pages on phones (on web, these open in a new browser tab)
+- **Resend** — sends sign-in emails (as Supabase's SMTP provider) and feedback notifications (via a Supabase Database Webhook → Edge Function)
 
 ## Documentation
 

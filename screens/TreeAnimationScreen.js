@@ -21,11 +21,12 @@ export default function TreeAnimationScreen({ navigation, route }) {
     isCorrect,
     question,
     selectedAnswer,
-    category,
+    difficulty,
     questions,
     questionIndex,
   } = route.params || {};
-  const { incrementScore, decrementScore } = useGameContext();
+  const { incrementScore, decrementScore, incrementStreak, resetStreak } =
+    useGameContext();
   const toScore = Math.max(0, Math.min(fromScore + (isCorrect ? 1 : -1), 5));
 
   const animValue = useRef(new Animated.Value(fromScore)).current;
@@ -38,13 +39,15 @@ export default function TreeAnimationScreen({ navigation, route }) {
     if (fromScore === toScore) {
       if (isCorrect) {
         incrementScore();
+        incrementStreak();
       } else {
         decrementScore();
+        resetStreak();
       }
       navigation.navigate("Answer", {
         question,
         selectedAnswer,
-        category,
+        difficulty,
         questions,
         questionIndex,
         scoreAlreadyUpdated: true,
@@ -64,13 +67,15 @@ export default function TreeAnimationScreen({ navigation, route }) {
       if (finished) {
         if (isCorrect) {
           incrementScore();
+          incrementStreak();
         } else {
           decrementScore();
+          resetStreak();
         }
         navigation.navigate("Answer", {
           question,
           selectedAnswer,
-          category,
+          difficulty,
           questions,
           questionIndex,
           scoreAlreadyUpdated: true,

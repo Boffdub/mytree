@@ -175,3 +175,8 @@ $$;
 
 REVOKE ALL ON FUNCTION public.delete_my_account() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.delete_my_account() TO authenticated;
+
+-- Live 0-5 tree score, persisted so it can actually reset to 0 when a tree
+-- completes. Previously derived from lifetime question_attempts, which could
+-- never go back down once a player had enough net-correct answers.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_tree_score INTEGER NOT NULL DEFAULT 0;

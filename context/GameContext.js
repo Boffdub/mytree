@@ -21,6 +21,7 @@ export const useGameContext = () => {
 export const GameProvider = ({ children }) => {
   const auth = useAuthContext();
   const [score, setScore] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -75,6 +76,14 @@ export const GameProvider = ({ children }) => {
     }
   }, [score, storage]);
 
+  const incrementStreak = useCallback(() => {
+    setCorrectStreak((prev) => prev + 1);
+  }, []);
+
+  const resetStreak = useCallback(() => {
+    setCorrectStreak(0);
+  }, []);
+
   const resetScore = useCallback(async () => {
     setScore(0);
     try {
@@ -89,6 +98,7 @@ export const GameProvider = ({ children }) => {
       try {
         const id = await storage.startSession(category);
         setCurrentSessionId(id);
+        setCorrectStreak(0);
         return id;
       } catch (err) {
         console.error("[GameContext] Failed to start session:", err);
@@ -131,9 +141,12 @@ export const GameProvider = ({ children }) => {
 
   const value = {
     score,
+    correctStreak,
     isLoading,
     incrementScore,
     decrementScore,
+    incrementStreak,
+    resetStreak,
     resetScore,
     startSession,
     saveAnswer,
