@@ -1,5 +1,4 @@
 import { supabase } from "./supabase";
-import { treesEarnedFromCorrect } from "../utils/stats";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -24,6 +23,6 @@ export async function getLeaderboard(range = "all") {
     displayName: row.display_name,
     totalCorrect: row.total_correct,
     accuracy: Number(row.accuracy),
-    treesEarned: treesEarnedFromCorrect(row.total_correct),
+    treesEarned: row.trees_completed,
   }));
 }

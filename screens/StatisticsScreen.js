@@ -13,10 +13,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import ScreenHeader from "../components/ScreenHeader";
 import { useAuthContext } from "../context/AuthContext";
+import { useGameContext } from "../context/GameContext";
 import { StorageService } from "../services/storage";
 import { getLeaderboard } from "../services/leaderboard";
 import { calculateStreak, toLocalDayKey } from "../utils/streak";
-import { treesEarnedFromCorrect } from "../utils/stats";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
 
@@ -100,6 +100,7 @@ function startOfWeek(date) {
 
 export default function StatisticsScreen({ navigation }) {
   const auth = useAuthContext();
+  const { treesCompleted } = useGameContext();
   const [attempts, setAttempts] = useState([]);
   const [range, setRange] = useState("all");
   const [leaderboard, setLeaderboard] = useState([]);
@@ -123,12 +124,15 @@ export default function StatisticsScreen({ navigation }) {
     }, [range]),
   );
 
-  const answered = attempts.length;
-  const correct = attempts.filter((a) => a.isCorrect).length;
+  // Shielded wrong answers are excluded from accuracy entirely - treated as
+  // if they never happened, same as the leaderboard's get_leaderboard SQL.
+  const countedAttempts = attempts.filter((a) => !a.shielded);
+  const answered = countedAttempts.length;
+  const correct = countedAttempts.filter((a) => a.isCorrect).length;
   const percentAccurate =
     answered === 0 ? 0 : Math.round((correct / answered) * 100);
   const streak = calculateStreak(attempts.map((a) => a.answeredAt));
-  const treesEarned = treesEarnedFromCorrect(correct);
+  const treesEarned = treesCompleted;
 
   const myRank =
     leaderboard.find((row) => row.userId === auth.user?.id) ?? null;
@@ -168,6 +172,11 @@ export default function StatisticsScreen({ navigation }) {
             <Text style={styles.statLabel}>Percent{"\n"}Accurate</Text>
           </View>
         </View>
+
+        <Text style={styles.shieldNote}>
+          Shielded wrong answers don't count toward your stats or the
+          leaderboard.
+        </Text>
 
         <View style={styles.treesCard}>
           <Image
@@ -368,6 +377,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  shieldNote: {
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    color: colors.gray,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+
   statNumber: { color: colors.white, fontSize: 14, fontFamily: fonts.bold },
   statLabel: {
     color: colors.white,

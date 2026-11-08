@@ -180,3 +180,42 @@ GRANT EXECUTE ON FUNCTION public.delete_my_account() TO authenticated;
 -- completes. Previously derived from lifetime question_attempts, which could
 -- never go back down once a player had enough net-correct answers.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_tree_score INTEGER NOT NULL DEFAULT 0;
+
+-- Lifetime count of fully-grown trees, used for the "trees earned" stat and
+-- leaderboard instead of the old floor(totalCorrect/5) approximation.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trees_completed INTEGER NOT NULL DEFAULT 0;
+
+DROP FUNCTION IF EXISTS public.get_leaderboard(TIMESTAMPTZ);
+
+CREATE FUNCTION public.get_leaderboard(window_start TIMESTAMPTZ DEFAULT NULL)
+RETURNS TABLE (
+  rank BIGINT,
+  user_id UUID,
+  display_name TEXT,
+  total_correct BIGINT,
+  accuracy NUMERIC,
+  trees_completed INTEGER
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT
+    RANK() OVER (
+      ORDER BY COUNT(*) FILTER (WHERE qa.is_correct) DESC,
+               ROUND(COUNT(*) FILTER (WHERE qa.is_correct)::NUMERIC / COUNT(*) * 100) DESC
+    ) AS rank,
+    qa.user_id,
+    COALESCE(NULLIF(TRIM(CONCAT(p.first_name, ' ', p.last_name)), ''), 'Anonymous') AS display_name,
+    COUNT(*) FILTER (WHERE qa.is_correct) AS total_correct,
+    ROUND(COUNT(*) FILTER (WHERE qa.is_correct)::NUMERIC / COUNT(*) * 100) AS accuracy,
+    p.trees_completed
+  FROM public.question_attempts qa
+  JOIN public.profiles p ON p.id = qa.user_id
+  WHERE (window_start IS NULL OR qa.answered_at >= window_start)
+    AND NOT qa.shielded
+  GROUP BY qa.user_id, p.first_name, p.last_name, p.trees_completed
+  ORDER BY total_correct DESC, accuracy DESC;
+$$;
+

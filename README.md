@@ -10,7 +10,8 @@ MyTree helps users learn about climate change through interactive quizzes. As yo
 - Pick a difficulty (Easy, Medium, or Hard) to start a quiz. Questions come from every category, in random order, with no repeats in a quiz.
 - Your difficulty is saved to your account and can be changed from your profile.
 - Statistics show your progress, your day streak, the trees you've earned, and a global leaderboard (week, month, or all time).
-- Lifelines and difficulty rules are being built for the beta.
+- Lifelines (50/50, Visual Reveal, Shield) are live, with rules that vary by difficulty.
+- Growing a full tree triggers a confetti celebration, then lets you keep playing with a fresh tree or head home.
 
 ## Technology Stack
 

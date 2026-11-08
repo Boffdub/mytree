@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useGameContext } from "../context/GameContext";
 import {
@@ -9,18 +9,14 @@ import {
   Image,
   Alert,
   Platform,
+  Animated,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getShuffledQuestionsByDifficulty } from "../data/questions";
 import { CATEGORY_INFO } from "../constants/categories";
 import { colors } from "../constants/colors";
 import { fonts } from "../styles/defaultStyles";
-
-function showComingSoon(feature) {
-  const message = `${feature} is on the way in a future update`;
-  if (Platform.OS === "web") window.alert(message);
-  else Alert.alert("Coming Soon", message);
-}
 
 // Which lifelines show at each difficulty. Easy has no Shield and no tree
 // shrinking, so it has no Shield icon here either - see Difficulty screen.
@@ -78,16 +74,69 @@ export default function QuestionScreen({ navigation, route }) {
   // State for which question number you're on (0 = first question)
   const [questionIndex, setQuestionIndex] = useState(0);
 
+  // Option indices to hide for the CURRENT question after using 50/50
+  const [hiddenOptions, setHiddenOptions] = useState([]);
+
+  const [showVisual, setShowVisual] = useState(false);
+
+  const [shieldArmed, setShieldArmed] = useState(false);
+
+  // One opacity value per option (assumes 4 options), reused across questions
+  const optionOpacities = useRef([
+    new Animated.Value(1),
+    new Animated.Value(1),
+    new Animated.Value(1),
+    new Animated.Value(1),
+  ]).current;
+
   // If session creation hasn't finished (or failed) after a few seconds, let the user
   // proceed anyway rather than leaving Submit disabled with no way forward - that one
   // session's stats may not get saved, which is a much smaller problem than a stuck quiz.
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
 
-  const { score, startSession, currentSessionId } = useGameContext();
+  const {
+    score,
+    startSession,
+    currentSessionId,
+    fiftyFiftyUsed,
+    useFiftyFifty,
+    visualRevealUsed,
+    useVisualReveal,
+    shieldsLeft,
+  } = useGameContext();
+
   const category = currentQuestion
     ? CATEGORY_INFO[currentQuestion.category]
     : null;
   const lifelines = lifelinesFor(difficulty);
+  const handleFiftyFifty = () => {
+    if (fiftyFiftyUsed || !currentQuestion) return;
+    const wrongIndices = currentQuestion.options
+      .map((_, i) => i)
+      .filter((i) => i !== currentQuestion.correct);
+    const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
+    const toHide = shuffled.slice(0, 2);
+    setHiddenOptions(toHide);
+    useFiftyFifty();
+    toHide.forEach((index) => {
+      Animated.timing(optionOpacities[index], {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const handleVisualReveal = () => {
+    if (visualRevealUsed || !currentQuestion) return;
+    setShowVisual(true);
+    useVisualReveal();
+  };
+
+  const handleToggleShield = () => {
+    if (shieldsLeft <= 0) return;
+    setShieldArmed((prev) => !prev);
+  };
 
   useEffect(() => {
     const indexFromRoute = route.params?.questionIndex ?? 0;
@@ -100,6 +149,10 @@ export default function QuestionScreen({ navigation, route }) {
     if (pool.length > 0 && indexFromRoute < pool.length) {
       setCurrentQuestion(pool[indexFromRoute]);
       setSelectedAnswer(null);
+      setHiddenOptions([]);
+      setShowVisual(false);
+      setShieldArmed(false);
+      optionOpacities.forEach((anim) => anim.setValue(1));
     }
 
     // Start a new session when entering the first question (index 0)
@@ -157,21 +210,26 @@ export default function QuestionScreen({ navigation, route }) {
 
             {/* Answer Options */}
             {currentQuestion.options.map((option, index) => (
-              <TouchableOpacity
+              <Animated.View
                 key={index}
-                style={[
-                  styles.optionButton,
-                  selectedAnswer === index && styles.optionButtonSelected,
-                ]}
-                onPress={() => setSelectedAnswer(index)}
+                style={{ opacity: optionOpacities[index], width: "100%" }}
+                pointerEvents={hiddenOptions.includes(index) ? "none" : "auto"}
               >
-                <View style={styles.optionLetterCircle}>
-                  <Text style={styles.optionLetterText}>
-                    {String.fromCharCode(65 + index)}
-                  </Text>
-                </View>
-                <Text style={styles.optionButtonText}>{option}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.optionButton,
+                    selectedAnswer === index && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => setSelectedAnswer(index)}
+                >
+                  <View style={styles.optionLetterCircle}>
+                    <Text style={styles.optionLetterText}>
+                      {String.fromCharCode(65 + index)}
+                    </Text>
+                  </View>
+                  <Text style={styles.optionButtonText}>{option}</Text>
+                </TouchableOpacity>
+              </Animated.View>
             ))}
 
             {/* Submit Button - only shows when an answer is selected and session is ready */}
@@ -193,6 +251,7 @@ export default function QuestionScreen({ navigation, route }) {
                     difficulty: difficulty,
                     questions: questions,
                     questionIndex: questionIndex,
+                    shieldArmed,
                   });
                 }}
               >
@@ -202,26 +261,45 @@ export default function QuestionScreen({ navigation, route }) {
 
             {/* Lifelines - icons only for now, tapping shows a stub until they're built */}
             <View style={styles.lifelineRow}>
-              {lifelines.map((lifeline) => (
-                <TouchableOpacity
-                  key={lifeline.key}
-                  style={styles.lifelineButton}
-                  onPress={() => showComingSoon(lifeline.label)}
-                >
-                  <Image
-                    source={lifeline.icon}
-                    style={styles.lifelineIcon}
-                    resizeMode="contain"
-                  />
-                  {lifeline.count != null && (
-                    <View style={styles.lifelineBadge}>
-                      <Text style={styles.lifelineBadgeText}>
-                        {lifeline.count}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
+              {lifelines.map((lifeline) => {
+                const isFiftyFifty = lifeline.key === "fiftyFifty";
+                const isVisualReveal = lifeline.key === "visualReveal";
+                const isShield = lifeline.key === "shield";
+                const isDisabled =
+                  (isFiftyFifty && fiftyFiftyUsed) ||
+                  (isVisualReveal && visualRevealUsed) ||
+                  (isShield && shieldsLeft <= 0);
+                const badgeCount = isShield ? shieldsLeft : lifeline.count;
+                return (
+                  <TouchableOpacity
+                    key={lifeline.key}
+                    style={[
+                      styles.lifelineButton,
+                      isDisabled && styles.lifelineButtonDisabled,
+                      isShield && shieldArmed && styles.lifelineButtonArmed,
+                    ]}
+                    disabled={isDisabled}
+                    onPress={() => {
+                      if (isFiftyFifty) handleFiftyFifty();
+                      else if (isVisualReveal) handleVisualReveal();
+                      else if (isShield) handleToggleShield();
+                    }}
+                  >
+                    <Image
+                      source={lifeline.icon}
+                      style={styles.lifelineIcon}
+                      resizeMode="contain"
+                    />
+                    {badgeCount != null && (
+                      <View style={styles.lifelineBadge}>
+                        <Text style={styles.lifelineBadgeText}>
+                          {badgeCount}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View style={styles.scoreBadge}>
@@ -232,6 +310,27 @@ export default function QuestionScreen({ navigation, route }) {
           <Text style={styles.loadingText}>Loading question...</Text>
         )}
       </View>
+
+      <Modal
+        visible={showVisual}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVisual(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowVisual(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>✕</Text>
+            </TouchableOpacity>
+            <View style={styles.visualPlaceholder}>
+              <Text style={styles.visualPlaceholderText}>Visual</Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -302,6 +401,43 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     fontFamily: fonts.bold,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 16,
+    width: "85%",
+    alignItems: "center",
+  },
+  modalCloseButton: {
+    alignSelf: "flex-end",
+    marginBottom: 8,
+  },
+  modalCloseButtonText: {
+    fontSize: 20,
+    fontFamily: fonts.bold,
+    color: colors.black,
+  },
+  visualPlaceholder: {
+    backgroundColor: colors.grayLight,
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  visualPlaceholderText: {
+    color: colors.gray,
+    fontSize: 16,
+    fontWeight: "500",
+    fontFamily: fonts.semiBold,
+  },
+
   // Answer option buttons
   optionButton: {
     flexDirection: "row",
@@ -368,6 +504,15 @@ const styles = StyleSheet.create({
   lifelineButton: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  lifelineButtonDisabled: {
+    opacity: 0.35,
+  },
+  lifelineButtonArmed: {
+    borderWidth: 2,
+    borderColor: colors.selectedYellow,
+    borderRadius: 24,
+    padding: 4,
   },
   lifelineIcon: {
     width: 40,

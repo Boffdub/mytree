@@ -54,7 +54,14 @@ export class StorageService {
     if (error) throw error;
   }
 
-  async saveAnswer(sessionId, category, questionId, selectedAnswer, isCorrect) {
+  async saveAnswer(
+    sessionId,
+    category,
+    questionId,
+    selectedAnswer,
+    isCorrect,
+    shielded = false,
+  ) {
     const { error } = await supabase.from("question_attempts").insert({
       session_id: sessionId,
       user_id: this.authState.user.id,
@@ -62,6 +69,7 @@ export class StorageService {
       question_id: questionId,
       selected_answer: selectedAnswer,
       is_correct: isCorrect,
+      shielded,
     });
     if (error) throw error;
   }
@@ -69,7 +77,9 @@ export class StorageService {
   async getAnsweredQuestions(category = null) {
     let query = supabase
       .from("question_attempts")
-      .select("question_id, selected_answer, is_correct, category, answered_at")
+      .select(
+        "question_id, selected_answer, is_correct, category, answered_at, shielded",
+      )
       .eq("user_id", this.authState.user.id);
     if (category) query = query.eq("category", category);
     const { data, error } = await query;
@@ -80,7 +90,25 @@ export class StorageService {
       isCorrect: row.is_correct,
       category: row.category,
       answeredAt: row.answered_at,
+      shielded: row.shielded,
     }));
+  }
+  async getTreesCompleted() {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("trees_completed")
+      .eq("id", this.authState.user.id)
+      .single();
+    if (error) throw error;
+    return data.trees_completed;
+  }
+
+  async completeTree(newCount) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ trees_completed: newCount })
+      .eq("id", this.authState.user.id);
+    if (error) throw error;
   }
 
   async clearAllData() {

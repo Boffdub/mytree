@@ -61,7 +61,17 @@ function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName={initialRoute}
-        screenOptions={{ cardStyle: { flex: 1 }, headerShown: false }}
+        screenOptions={{
+          cardStyle: { flex: 1 },
+          headerShown: false,
+          cardStyleInterpolator: ({ current }) => ({
+            cardStyle: { opacity: current.progress },
+          }),
+          transitionSpec: {
+            open: { animation: "timing", config: { duration: 150 } },
+            close: { animation: "timing", config: { duration: 150 } },
+          },
+        }}
       >
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />

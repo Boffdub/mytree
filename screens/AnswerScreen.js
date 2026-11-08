@@ -25,6 +25,9 @@ export default function AnswerScreen({ navigation, route }) {
     questions,
     questionIndex,
     scoreAlreadyUpdated,
+    isShielded,
+    treeCompleted,
+    treesCompletedCount,
   } = route.params || {};
   const {
     score,
@@ -33,6 +36,7 @@ export default function AnswerScreen({ navigation, route }) {
     saveAnswer,
     completeSession,
     correctStreak,
+    resetScore,
   } = useGameContext();
 
   const auth = useAuthContext();
@@ -78,6 +82,7 @@ export default function AnswerScreen({ navigation, route }) {
           question.id,
           selectedAnswer,
           isCorrect,
+          isShielded,
         );
         if (!scoreAlreadyUpdated) {
           if (isCorrect) {
@@ -86,7 +91,7 @@ export default function AnswerScreen({ navigation, route }) {
             await decrementScore();
           }
         }
-        if (!hasNextQuestion) {
+        if (!hasNextQuestion || treeCompleted) {
           await completeSession();
         }
       };
@@ -106,6 +111,7 @@ export default function AnswerScreen({ navigation, route }) {
     saveAnswer,
     completeSession,
     hasNextQuestion,
+    treeCompleted,
   ]);
   useEffect(() => {
     if (!auth.user?.id) return;
@@ -250,7 +256,39 @@ export default function AnswerScreen({ navigation, route }) {
               </View>
 
               {/* Navigation Buttons */}
-              {hasNextQuestion ? (
+              {treeCompleted ? (
+                <>
+                  <View style={styles.congratsBox}>
+                    <Text style={styles.congratsEmoji}>🥳</Text>
+                    <Text style={styles.congratsTitle}>Congrats!!!</Text>
+                    <Text style={styles.congratsSubtitle}>
+                      You've grown a full tree!!!
+                    </Text>
+                    <Text style={styles.congratsCount}>
+                      You have {treesCompletedCount}{" "}
+                      {treesCompletedCount === 1 ? "tree" : "trees"} earned
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={async () => {
+                      await resetScore();
+                      navigation.navigate("Question", { difficulty });
+                    }}
+                  >
+                    <Text style={styles.nextButtonText}>Keep Playing</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={async () => {
+                      await resetScore();
+                      navigation.navigate("Home");
+                    }}
+                  >
+                    <Text style={styles.nextButtonText}>🏠 Home</Text>
+                  </TouchableOpacity>
+                </>
+              ) : hasNextQuestion ? (
                 <TouchableOpacity
                   style={styles.nextButton}
                   onPress={() => {
@@ -456,6 +494,31 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     color: colors.black,
     marginBottom: 2,
+  },
+  congratsBox: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  congratsEmoji: {
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  congratsTitle: {
+    fontSize: 22,
+    fontFamily: fonts.bold,
+    color: colors.primaryGreen,
+  },
+  congratsSubtitle: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: colors.primaryGreen,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  congratsCount: {
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    color: colors.black,
   },
   statValue: {
     fontSize: 16,

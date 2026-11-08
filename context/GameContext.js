@@ -18,10 +18,20 @@ export const useGameContext = () => {
   return context;
 };
 
+function shieldCountFor(difficulty) {
+  if (difficulty === "Medium") return 3;
+  if (difficulty === "Hard") return 1;
+  return 0;
+}
+
 export const GameProvider = ({ children }) => {
   const auth = useAuthContext();
   const [score, setScore] = useState(0);
   const [correctStreak, setCorrectStreak] = useState(0);
+  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false);
+  const [visualRevealUsed, setVisualRevealUsed] = useState(false);
+  const [shieldsLeft, setShieldsLeft] = useState(0);
+  const [treesCompleted, setTreesCompleted] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,11 +46,11 @@ export const GameProvider = ({ children }) => {
     }
     let cancelled = false;
     setIsLoading(true);
-    storage
-      .getScore()
-      .then((s) => {
+    Promise.all([storage.getScore(), storage.getTreesCompleted()])
+      .then(([s, t]) => {
         if (!cancelled) {
           setScore(s);
+          setTreesCompleted(t);
           setIsLoading(false);
         }
       })
@@ -48,6 +58,7 @@ export const GameProvider = ({ children }) => {
         console.error("[GameContext] Failed to load score:", err);
         if (!cancelled) {
           setScore(0);
+          setTreesCompleted(0);
           setIsLoading(false);
         }
       });
@@ -84,6 +95,29 @@ export const GameProvider = ({ children }) => {
     setCorrectStreak(0);
   }, []);
 
+  const useFiftyFifty = useCallback(() => {
+    setFiftyFiftyUsed(true);
+  }, []);
+
+  const useVisualReveal = useCallback(() => {
+    setVisualRevealUsed(true);
+  }, []);
+
+  const consumeShield = useCallback(() => {
+    setShieldsLeft((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const completeTree = useCallback(async () => {
+    const next = treesCompleted + 1;
+    setTreesCompleted(next);
+    try {
+      await storage.completeTree(next);
+    } catch (err) {
+      console.error("[GameContext] Failed to persist tree completion:", err);
+    }
+    return next;
+  }, [treesCompleted, storage]);
+
   const resetScore = useCallback(async () => {
     setScore(0);
     try {
@@ -99,6 +133,9 @@ export const GameProvider = ({ children }) => {
         const id = await storage.startSession(category);
         setCurrentSessionId(id);
         setCorrectStreak(0);
+        setFiftyFiftyUsed(false);
+        setVisualRevealUsed(false);
+        setShieldsLeft(shieldCountFor(category));
         return id;
       } catch (err) {
         console.error("[GameContext] Failed to start session:", err);
@@ -109,7 +146,13 @@ export const GameProvider = ({ children }) => {
   );
 
   const saveAnswer = useCallback(
-    async (category, questionId, selectedAnswer, isCorrect) => {
+    async (
+      category,
+      questionId,
+      selectedAnswer,
+      isCorrect,
+      shielded = false,
+    ) => {
       if (!currentSessionId) {
         console.warn("[GameContext] saveAnswer called without active session");
         return;
@@ -121,6 +164,7 @@ export const GameProvider = ({ children }) => {
           questionId,
           selectedAnswer,
           isCorrect,
+          shielded,
         );
       } catch (err) {
         console.error("[GameContext] Failed to save answer:", err);
@@ -142,11 +186,19 @@ export const GameProvider = ({ children }) => {
   const value = {
     score,
     correctStreak,
+    fiftyFiftyUsed,
+    visualRevealUsed,
+    shieldsLeft,
+    treesCompleted,
     isLoading,
     incrementScore,
     decrementScore,
     incrementStreak,
     resetStreak,
+    useFiftyFifty,
+    useVisualReveal,
+    consumeShield,
+    completeTree,
     resetScore,
     startSession,
     saveAnswer,

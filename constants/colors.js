@@ -28,4 +28,5 @@ export const colors = {
 
   // Celebration (sparkles on full tree)
   sparkleYellow: "#FFD700",
+  celebrationPink: "#FF4FD8",
 };
