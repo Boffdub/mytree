@@ -302,12 +302,26 @@ export default function AnswerScreen({ navigation, route }) {
                   <Text style={styles.nextButtonText}>Next Question →</Text>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity
-                  style={styles.nextButton}
-                  onPress={() => navigation.navigate("Home")}
-                >
-                  <Text style={styles.nextButtonText}>🏠 Home</Text>
-                </TouchableOpacity>
+                <>
+                  <View style={styles.congratsBox}>
+                    <Text style={styles.congratsEmoji}>🌱</Text>
+                    <Text style={styles.congratsTitle}>
+                      You've answered every question!
+                    </Text>
+                    <Text style={styles.congratsSubtitle}>
+                      Your tree made it to {score}/5 this round.
+                    </Text>
+                    <Text style={styles.congratsCount}>
+                      Check back soon for more questions to keep growing it.
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={() => navigation.navigate("Home")}
+                  >
+                    <Text style={styles.nextButtonText}>🏠 Home</Text>
+                  </TouchableOpacity>
+                </>
               )}
             </>
           ) : (

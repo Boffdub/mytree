@@ -15,16 +15,13 @@ describe("StorageService (auth mode)", () => {
     supabase.from.mockReset();
   });
 
-  test("getScore sums is_correct attempts, clamped to 0-5", async () => {
+  test("getScore reads current_tree_score from the profile", async () => {
     supabase.from.mockReturnValue({
       select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: [
-            { is_correct: true },
-            { is_correct: true },
-            { is_correct: false },
-          ],
-          error: null,
+        eq: jest.fn().mockReturnValue({
+          single: jest
+            .fn()
+            .mockResolvedValue({ data: { current_tree_score: 3 }, error: null }),
         }),
       }),
     });
@@ -32,8 +29,8 @@ describe("StorageService (auth mode)", () => {
     const svc = new StorageService(authState);
     const score = await svc.getScore();
 
-    expect(score).toBe(1);
-    expect(supabase.from).toHaveBeenCalledWith("question_attempts");
+    expect(score).toBe(3);
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
   });
 
   test("startSession inserts a game_sessions row and returns its id", async () => {
@@ -71,6 +68,7 @@ describe("StorageService (auth mode)", () => {
       question_id: 1,
       selected_answer: 2,
       is_correct: false,
+      shielded: false,
     });
   });
 
